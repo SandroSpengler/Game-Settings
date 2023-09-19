@@ -1,53 +1,90 @@
-import { Button, CssBaseline, PaletteMode, ThemeProvider, createTheme } from '@mui/material'
+import { CssBaseline, PaletteMode, PaletteOptions, ThemeProvider, createTheme } from '@mui/material'
 
-import WavingHandIcon from '@mui/icons-material/WavingHand'
-import { amber, grey, deepOrange } from '@mui/material/colors'
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
+import { HashRouter, Route, Routes } from 'react-router-dom'
+import Header from './components/Header'
+import HomePage from './pages/HomePage'
+import LeagueOfLegendsPage from './pages/LeagueOfLegendsPage'
 
 function App(): JSX.Element {
   const [mode, setMode] = useState<PaletteMode>('light')
-  const colorMode = useMemo(
-    () => ({
-      // The dark mode switch would invoke this method
-      toggleColorMode: () => {
-        setMode((prevMode: PaletteMode) => (prevMode === 'light' ? 'dark' : 'light'))
-      }
-    }),
-    []
-  )
 
-  const theme = useMemo(() => createTheme(getDesignTokens(mode)), [mode])
+  const toggleColorMode = () => {
+    console.log('XD')
+    setMode((prevMode: PaletteMode) => (prevMode === 'light' ? 'dark' : 'light'))
+  }
+
+  const getDesignTokens = (mode: PaletteMode) => {
+    const palette = {
+      mode,
+      ...(mode === 'light'
+        ? {
+            primary: {
+              light: '#757ce8',
+              main: '#3f50b5',
+              dark: '#002884',
+              contrastText: '#fff'
+            },
+            secondary: {
+              light: '#33eb91',
+              main: '#00e676',
+              dark: '#00a152',
+              contrastText: '#000'
+            }
+            // custom light mode palette here
+          }
+        : {
+            // custom dark mode palette here
+            secondary: {
+              light: '#33eb91',
+              main: '#00e676',
+              dark: '#00a152',
+              contrastText: '#000'
+            }
+          })
+    } as PaletteOptions
+
+    return palette
+  }
+
+  const theme = createTheme({
+    typography: {
+      button: {
+        textTransform: 'none'
+      }
+    },
+    palette: getDesignTokens(mode),
+    components: {
+      MuiTabs: {
+        styleOverrides: {
+          indicator: {
+            backgroundColor: 'white'
+          }
+        }
+      },
+      MuiTab: {
+        styleOverrides: {
+          root: {
+            color: 'white'
+          }
+        }
+      }
+    }
+  })
 
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Button
-        variant="outlined"
-        onClick={async () => {
-          // const process = await window.ProcessHandler.launchProcess()
-          colorMode.toggleColorMode()
-
-          console.log(process)
-        }}
-      >
-        <WavingHandIcon></WavingHandIcon>
-        Launch Process
-      </Button>
+      <HashRouter>
+        <Header toggleDarkmode={toggleColorMode}></Header>
+        <Routes>
+          <Route path="/" Component={HomePage}></Route>
+          <Route path="/home" element={<HomePage />}></Route>
+          <Route path="/lol" Component={LeagueOfLegendsPage}></Route>
+        </Routes>
+      </HashRouter>
     </ThemeProvider>
   )
 }
 
 export default App
-
-const getDesignTokens = (mode: PaletteMode) => ({
-  palette: {
-    mode,
-    ...(mode === 'light'
-      ? {
-          // custom light mode palette here
-        }
-      : {
-          // custom dark mode palette here
-        })
-  }
-})
