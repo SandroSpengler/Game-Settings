@@ -3,7 +3,7 @@ import RocketLaunchIcon from '@mui/icons-material/RocketLaunch'
 import { Box, Grid, IconButton, Paper, Stack, Tooltip, Typography } from '@mui/material'
 
 import SvgIcon from '@mui/material/SvgIcon'
-import { Process } from '@renderer/types/Process'
+import Process from '@renderer/types/Process'
 import { useEffect, useState } from 'react'
 import { ReactComponent as LeagueClient } from '../assets/LeagueClient.svg'
 import { ReactComponent as RiotClient } from '../assets/RiotClient.svg'
@@ -20,6 +20,16 @@ export const LeagueOfLegendsPage = () => {
     }, 2500)
     return () => clearInterval(interval)
   }, [])
+
+  useEffect(() => {
+    setInstallPaths()
+  }, [])
+
+  const setInstallPaths = async (): Promise<void> => {
+    const leagueClientInstallPath = await window.ProcessHandler.getLeagueClientInstallPath()
+
+    console.log(leagueClientInstallPath)
+  }
 
   const launchLolClient = async (): Promise<void> => {
     const process = await window.ProcessHandler.launchProcess(runningLolClients.length)

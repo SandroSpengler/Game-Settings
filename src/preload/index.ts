@@ -1,13 +1,12 @@
-import { contextBridge } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
-import { ProcessHandler } from '../main/types/ProcessHandler'
+import { contextBridge, ipcRenderer } from 'electron'
 import {
   checkForRunningLolClients,
   launchProcess,
   stopProcess
 } from '../main/services/ProcessService'
 
-// import kill from "tree-kill";
+import ProcessHandler from '../renderer/src/types/ProcessHandler'
 
 // Custom APIs for renderer
 const api = {}
@@ -23,7 +22,12 @@ if (process.contextIsolated) {
     const ProcessHandler: ProcessHandler = {
       launchProcess: launchProcess,
       stopProcess: stopProcess,
-      checkForRunningLolClients: checkForRunningLolClients
+      checkForRunningLolClients: checkForRunningLolClients,
+
+      // use electron node api from the main process
+      getLeagueClientInstallPath: () => ipcRenderer.invoke('getLeagueClientPath'),
+      getRiotClientInstallPath: () => ipcRenderer.invoke('getRiotClientPath'),
+      getStore: () => ipcRenderer.invoke('getStore')
     }
 
     contextBridge.exposeInMainWorld('ProcessHandler', ProcessHandler)

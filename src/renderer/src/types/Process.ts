@@ -1,4 +1,4 @@
-export type Process = {
+type Process = {
   pid: number
   ppid?: number | undefined
   uid?: number | undefined
@@ -7,3 +7,5 @@ export type Process = {
   cmd: string[]
   bin?: string
 }
+
+export default Process

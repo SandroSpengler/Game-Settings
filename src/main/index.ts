@@ -1,7 +1,12 @@
-import { app, shell, BrowserWindow } from 'electron'
+import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
+import {
+  getLeagueClientInstallPath,
+  getRiotClientInstallPath,
+  getStore
+} from './services/ProcessService'
 
 function createWindow(): void {
   // Create the browser window.
@@ -41,6 +46,10 @@ function createWindow(): void {
 app.whenReady().then(() => {
   // Set app user model id for windows
   electronApp.setAppUserModelId('com.electron')
+
+  ipcMain.handle('getStore', getStore)
+  ipcMain.handle('getLeagueClientPath', getLeagueClientInstallPath)
+  ipcMain.handle('getRiotClientPath', getRiotClientInstallPath)
 
   // Default open or close DevTools by F12 in development
   // and ignore CommandOrControl + R in production.

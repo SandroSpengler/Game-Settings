@@ -1,9 +1,10 @@
 import cp from 'child_process'
-import { kill } from 'process'
-// import * as psList from 'ps-list'
-// import * as ps from 'ps-node'
 import find from 'find-process'
-import { Process } from '../types/Process'
+import { kill } from 'process'
+
+import Store from 'electron-store'
+import Process from '../../renderer/src/types/Process'
+import SettingsStore from '../../renderer/src/types/SettingsStore'
 
 export const launchProcess = async (clientCount: number): Promise<Process> => {
   const launchArgs: string[] = ['--launch-product=league_of_legends', '--launch-patchline=live']
@@ -52,8 +53,6 @@ export const checkForRunningLolClients = async (
   }
 
   for (let process of runningProcesses) {
-    console.log(process)
-
     if (process.name === 'LeagueClientUx.exe') {
       continue
     }
@@ -76,7 +75,11 @@ export const checkForRunningLolClients = async (
   return runningClients
 }
 
-export const checkLeagueClientInstallPath = async () => {
+export const getLeagueClientInstallPath = async (): Promise<string> => {
+  const settingsStore = await getStore()
+
+  console.log(settingsStore)
+
   // getStoreSettings
   //
   // 1. check last saved directory
@@ -94,9 +97,11 @@ export const checkLeagueClientInstallPath = async () => {
   // 3. check default location
   //
   // 4. throw new error -> please validate league of legends install path
+
+  return settingsStore.paths.leagueClientPath
 }
 
-export const checkRiotClientInstallPath = async () => {
+export const getRiotClientInstallPath = async (): Promise<string> => {
   // getStoreSettings
   //
   // 1. check last saved directory
@@ -115,4 +120,13 @@ export const checkRiotClientInstallPath = async () => {
   // 3. check default location
   //
   // 4. throw new error -> please validate riot client install path
+  return ''
+}
+
+export const getStore = async (): Promise<SettingsStore> => {
+  const store = new Store()
+
+  const settingsStore = store.get('settingsStore') as SettingsStore
+
+  return settingsStore
 }
