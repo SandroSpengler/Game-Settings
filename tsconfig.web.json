@@ -5,8 +5,9 @@
     "src/renderer/src/**/*",
     "src/renderer/src/**/*.tsx",
     "src/preload/*.d.ts"
-  ],
+, "src/services"  ],
   "compilerOptions": {
+     "types": ["vite-plugin-svgr/client"],
     "composite": true,
     "jsx": "react-jsx",
     "baseUrl": ".",

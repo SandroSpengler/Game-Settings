@@ -1,7 +1,7 @@
-import { ProcessHandler } from "./EventHandler";
+import { ProcessHandler } from './ProcessHandler'
 
 declare global {
-	interface Window {
-		ProcessHandler: ProcessHandler;
-	}
+  interface Window {
+    ProcessHandler: ProcessHandler
+  }
 }

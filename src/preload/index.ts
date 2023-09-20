@@ -1,6 +1,12 @@
 import { contextBridge } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
-import cp from 'child_process'
+import { ProcessHandler } from '../main/types/ProcessHandler'
+import {
+  checkForRunningLolClients,
+  launchProcess,
+  stopProcess
+} from '../main/services/ProcessService'
+
 // import kill from "tree-kill";
 
 // Custom APIs for renderer
@@ -14,21 +20,13 @@ if (process.contextIsolated) {
     contextBridge.exposeInMainWorld('electron', electronAPI)
     contextBridge.exposeInMainWorld('api', api)
 
-    contextBridge.exposeInMainWorld('ProcessHandler', {
-      launchProcess: async (): Promise<cp.ChildProcessWithoutNullStreams> => {
-        const process = cp.spawn('C:/Riot Games/Riot Client/RiotClientServices.exe', [
-          '--allow-multiple-clients'
-        ])
+    const ProcessHandler: ProcessHandler = {
+      launchProcess: launchProcess,
+      stopProcess: stopProcess,
+      checkForRunningLolClients: checkForRunningLolClients
+    }
 
-        return process
-
-        // setTimeout(() => {
-        // 	console.log("killing");
-
-        // 	kill(process.pid!);
-        // }, 10000);
-      }
-    })
+    contextBridge.exposeInMainWorld('ProcessHandler', ProcessHandler)
   } catch (error) {
     console.error(error)
   }

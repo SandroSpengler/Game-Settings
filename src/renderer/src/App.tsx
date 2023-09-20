@@ -4,13 +4,12 @@ import { useState } from 'react'
 import { HashRouter, Route, Routes } from 'react-router-dom'
 import Header from './components/Header'
 import HomePage from './pages/HomePage'
-import LeagueOfLegendsPage from './pages/LeagueOfLegendsPage'
+import { LeagueOfLegendsPage } from './pages/LeagueOfLegendsPage'
 
 function App(): JSX.Element {
-  const [mode, setMode] = useState<PaletteMode>('light')
+  const [mode, setMode] = useState<PaletteMode>('dark')
 
   const toggleColorMode = () => {
-    console.log('XD')
     setMode((prevMode: PaletteMode) => (prevMode === 'light' ? 'dark' : 'light'))
   }
 
@@ -53,7 +52,7 @@ function App(): JSX.Element {
         textTransform: 'none'
       }
     },
-    palette: getDesignTokens(mode),
+    palette: { ...getDesignTokens(mode), ...{} },
     components: {
       MuiTabs: {
         styleOverrides: {
