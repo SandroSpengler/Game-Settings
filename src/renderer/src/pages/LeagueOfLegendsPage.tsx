@@ -148,16 +148,5 @@ export const LeagueOfLegendsPage = () => {
         </Box>
       </Grid>
     </Grid>
-
-    // sx={{ marginLeft: 'auto', marginRight: '0' }}
-
-    // <Button
-    //   variant="outlined"
-    //   onClick={async () => {
-    //     console.log(process)
-    //   }}
-    // >
-    //   <WavingHandIcon></WavingHandIcon>
-    // </Button>
   )
 }

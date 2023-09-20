@@ -4,7 +4,7 @@ import { kill } from 'process'
 
 import Store from 'electron-store'
 import Process from '../../renderer/src/types/Process'
-import SettingsStore from '../../renderer/src/types/SettingsStore'
+import SettingsStore, { StoreSettingsSchema } from '../../renderer/src/types/SettingsStore'
 
 export const launchProcess = async (clientCount: number): Promise<Process> => {
   const launchArgs: string[] = ['--launch-product=league_of_legends', '--launch-patchline=live']
@@ -31,7 +31,6 @@ export const launchProcess = async (clientCount: number): Promise<Process> => {
 export const stopProcess = async (processes: Process[]): Promise<void> => {
   for (let process of processes) {
     const systemProcesses = await find('pid', process.pid!)
-    console.log(systemProcesses)
 
     if (systemProcesses.length > 0) {
       kill(process.pid!)
@@ -78,8 +77,6 @@ export const checkForRunningLolClients = async (
 export const getLeagueClientInstallPath = async (): Promise<string> => {
   const settingsStore = await getStore()
 
-  console.log(settingsStore)
-
   // getStoreSettings
   //
   // 1. check last saved directory
@@ -98,7 +95,8 @@ export const getLeagueClientInstallPath = async (): Promise<string> => {
   //
   // 4. throw new error -> please validate league of legends install path
 
-  return settingsStore.paths.leagueClientPath
+  console.log(settingsStore.leagueClientPath)
+  return settingsStore.leagueClientPath
 }
 
 export const getRiotClientInstallPath = async (): Promise<string> => {
@@ -124,9 +122,9 @@ export const getRiotClientInstallPath = async (): Promise<string> => {
 }
 
 export const getStore = async (): Promise<SettingsStore> => {
-  const store = new Store()
+  // ToDo
+  // Handle validation error -> store corrupt -> reset store
+  const store = new Store({ schema: StoreSettingsSchema })
 
-  const settingsStore = store.get('settingsStore') as SettingsStore
-
-  return settingsStore
+  return store.store
 }

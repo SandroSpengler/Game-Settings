@@ -1,8 +1,17 @@
-export default interface SettingsStore {
-  paths: Paths
-}
+import { Schema } from 'electron-store'
 
-interface Paths {
+export default interface SettingsStore {
   leagueClientPath: string
   riotClientPath: string
+}
+
+export const StoreSettingsSchema: Schema<SettingsStore> = {
+  leagueClientPath: {
+    type: 'string',
+    default: ''
+  },
+  riotClientPath: {
+    type: 'string',
+    default: ''
+  }
 }
