@@ -26,9 +26,17 @@ export const LeagueOfLegendsPage = () => {
   }, [])
 
   const setInstallPaths = async (): Promise<void> => {
-    const leagueClientInstallPath = await window.ProcessHandler.getLeagueClientInstallPath()
+    let leagueClientInstallPath = ''
+    try {
+      leagueClientInstallPath = await window.ProcessHandler.getLeagueClientInstallPath()
 
-    console.log(leagueClientInstallPath)
+      console.log(leagueClientInstallPath)
+    } catch (error: any) {
+      console.log(error.message)
+      leagueClientInstallPath = ''
+    } finally {
+      console.log(leagueClientInstallPath)
+    }
   }
 
   const launchLolClient = async (): Promise<void> => {
@@ -38,10 +46,8 @@ export const LeagueOfLegendsPage = () => {
   }
 
   const stopAllClients = async (): Promise<void> => {
-    try {
-      await window.ProcessHandler.stopProcess(runningLolClients)
-      setRunningLolClients([])
-    } catch (error) {}
+    await window.ProcessHandler.stopProcess(runningLolClients)
+    setRunningLolClients([])
   }
 
   return (
