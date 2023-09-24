@@ -9,24 +9,35 @@ import fs from 'fs'
 
 export const launchProcess = async (clientCount: number): Promise<Process> => {
   const launchArgs: string[] = ['--launch-product=league_of_legends', '--launch-patchline=live']
+  const settingsStore = await getStore()
+
+  let lolClient
 
   if (clientCount > 0) {
     launchArgs.push('--allow-multiple-clients')
   }
 
-  const lolClient = cp.spawn('C:/Riot Games/Riot Client/RiotClientServices.exe', launchArgs, {
-    detached: true
-  })
+  try {
+    lolClient = cp.spawn(
+      `${settingsStore.store.riotClientPath}/RiotClientServices.exe`,
+      launchArgs,
+      {
+        detached: true
+      }
+    )
 
-  lolClient.unref()
+    lolClient.unref()
 
-  const spawnedClient: Process = {
-    cmd: lolClient.spawnargs,
-    bin: lolClient.spawnfile,
-    pid: lolClient.pid!
+    const spawnedClient: Process = {
+      cmd: lolClient.spawnargs,
+      bin: lolClient.spawnfile,
+      pid: lolClient.pid!
+    }
+
+    return spawnedClient
+  } catch (error) {
+    throw error
   }
-
-  return spawnedClient
 }
 
 export const stopProcess = async (processes: Process[]): Promise<void> => {
@@ -95,39 +106,17 @@ export const getLeagueClientInstallPath = async (): Promise<string> => {
   }
 
   try {
-    const runningClients = await checkForRunningLolClients([])
+    await validateLeagueClientPath('C:/Riot Games/League of Legends')
 
-    if (runningClients.length > 0) {
-      if (runningClients[0].bin !== '') {
-        console.log(runningClients[0].bin!)
-        await validateLeagueClientPath(runningClients[0].bin!)
-
-        settingsStore.set('leagueClientPath', runningClients[0].bin!)
-
-        needToResetPath = false
-        return settingsStore.store.leagueClientPath
-      }
-    }
-  } catch (error: any) {
-    console.log(error)
+    needToResetPath = false
+    settingsStore.set('leagueClientPath', 'C:/Riot Games/League of Legends')
+  } catch (error) {
+    errorMessage = 'could not determine League of Legends install path'
     needToResetPath = true
-    errorMessage = 'could not automatically determine client path'
   }
-
-  try {
-  } catch (error) {}
-  // 3. check default location
-  //
-  // 4.
-  //  setPath = ""
-  //  catch error
-  // errormessage += could not determine path + error.message
-  // error.message -> no client running
-  // error.message -> the currently running client provides no install path information
 
   if (needToResetPath) {
     settingsStore.set('leagueClientPath', '')
-    // save to store
 
     throw new Error(errorMessage)
   }
@@ -136,28 +125,37 @@ export const getLeagueClientInstallPath = async (): Promise<string> => {
 }
 
 export const getRiotClientInstallPath = async (): Promise<string> => {
-  // getStoreSettings
+  const settingsStore = await getStore()
+  let needToResetPath = false
+  let errorMessage = ''
 
-  // 1. check last saved directory
-  // if StoreSettings.RiotClientInstallPath !== ""
-  //  if StoreSettings.RiotClientInstallPath.contains === RiotClientService.exe
-  //    true ->ß
-  //      return path
+  try {
+    await validateRiotClientPath(settingsStore.store.riotClientPath)
 
-  // 2. check running client
-  // if running client count > 0
+    needToResetPath = false
 
-  //  if runningClient.InstallPath.contains === RiotClientService.exe
-  //    true ->
-  //     StoreSettings.RiotClientInstallPath = runningClient.InstallPath
-  //     return path
-  //
-  // 3. check default location
-  //
-  // 4.
-  // setPath = ""
-  // throw new error -> please validate riot client install path
-  return ''
+    return settingsStore.store.riotClientPath
+  } catch (error: any) {
+    needToResetPath = true
+    errorMessage = error.message
+  }
+
+  try {
+    await validateRiotClientPath('C:/Riot Games/Riot Client')
+
+    needToResetPath = false
+    settingsStore.set('riotClientPath', 'C:/Riot Games/Riot Client')
+  } catch (error) {
+    errorMessage = 'Could not determine Riot Client install path'
+  }
+
+  if (needToResetPath) {
+    settingsStore.set('riotClientPath', '')
+
+    throw new Error(errorMessage)
+  }
+
+  return settingsStore.store.leagueClientPath
 }
 
 export const getStore = async (): Promise<Store<SettingsStore>> => {
@@ -179,9 +177,9 @@ export const validateLeagueClientPath = async (leagueClientPath: string): Promis
     throw new Error('saved client path is invalid')
   }
 
-  const lockFileExsits = fs.existsSync(`${leagueClientPath}/LeagueClient.exe`)
+  const LeagueClientExsits = fs.existsSync(`${leagueClientPath}/LeagueClient.exe`)
 
-  if (!lockFileExsits) {
+  if (!LeagueClientExsits) {
     throw new Error('saved client path is invalid')
   }
 
@@ -193,4 +191,31 @@ export const validateLeagueClientPath = async (leagueClientPath: string): Promis
   // return fileContent
 
   return leagueClientPath
+}
+
+export const validateRiotClientPath = async (riotClientPath: string): Promise<string> => {
+  if (riotClientPath === '') {
+    throw new Error('saved client path is invalid')
+  }
+
+  const pathExists = fs.existsSync(riotClientPath)
+
+  if (!pathExists) {
+    throw new Error('saved client path is invalid')
+  }
+
+  const LeagueClientExsits = fs.existsSync(`${riotClientPath}/RiotClientServices.exe`)
+
+  if (!LeagueClientExsits) {
+    throw new Error('saved client path is invalid')
+  }
+
+  // validate Lockfile / read it out
+  // const fileContent = fs.readFileSync('C:/Riot Games/League of Legends/lockfile', {
+  //   encoding: 'binary'
+  // })
+
+  // return fileContent
+
+  return riotClientPath
 }

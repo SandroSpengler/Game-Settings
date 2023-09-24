@@ -5,7 +5,8 @@ import icon from '../../resources/icon.png?asset'
 import {
   getLeagueClientInstallPath,
   getRiotClientInstallPath,
-  getStore
+  getStore,
+  launchProcess
 } from './services/ProcessService'
 
 function createWindow(): void {
@@ -48,6 +49,7 @@ app.whenReady().then(() => {
   electronApp.setAppUserModelId('com.electron')
 
   ipcMain.handle('getStore', getStore)
+  ipcMain.handle('launchProcess', (_, clientCount) => launchProcess(clientCount))
   ipcMain.handle('getLeagueClientPath', getLeagueClientInstallPath)
   ipcMain.handle('getRiotClientPath', getRiotClientInstallPath)
 
