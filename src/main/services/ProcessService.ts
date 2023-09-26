@@ -6,6 +6,8 @@ import Store from 'electron-store'
 import Process from '../../renderer/src/types/Process'
 import SettingsStore, { StoreSettingsSchema } from '../../renderer/src/types/SettingsStore'
 import fs from 'fs'
+import { client } from '../../renderer/src/types/ClientTypes'
+import { dialog } from 'electron'
 
 export const launchProcess = async (clientCount: number): Promise<Process> => {
   const launchArgs: string[] = ['--launch-product=league_of_legends', '--launch-patchline=live']
@@ -183,13 +185,6 @@ export const validateLeagueClientPath = async (leagueClientPath: string): Promis
     throw new Error('saved client path is invalid')
   }
 
-  // validate Lockfile / read it out
-  // const fileContent = fs.readFileSync('C:/Riot Games/League of Legends/lockfile', {
-  //   encoding: 'binary'
-  // })
-
-  // return fileContent
-
   return leagueClientPath
 }
 
@@ -210,6 +205,16 @@ export const validateRiotClientPath = async (riotClientPath: string): Promise<st
     throw new Error('saved client path is invalid')
   }
 
+  return riotClientPath
+}
+
+export const determineLCUProperties = async (): Promise<string> => {
+  const clientPath = await getLeagueClientInstallPath()
+
+  if (clientPath === '') return ''
+
+  console.log(clientPath)
+
   // validate Lockfile / read it out
   // const fileContent = fs.readFileSync('C:/Riot Games/League of Legends/lockfile', {
   //   encoding: 'binary'
@@ -217,5 +222,25 @@ export const validateRiotClientPath = async (riotClientPath: string): Promise<st
 
   // return fileContent
 
-  return riotClientPath
+  return ''
+}
+
+export const pickClientPath = async (client: client): Promise<string> => {
+  const dialogResult = await dialog.showOpenDialog({ properties: ['openDirectory'] })
+
+  const clientPath = dialogResult.filePaths[0].replaceAll('\\', '/')
+
+  if (client === 'league') {
+    validateLeagueClientPath(clientPath)
+  }
+
+  try {
+    if (client === 'riot') {
+      validateRiotClientPath(clientPath)
+    }
+  } catch (error) {
+    console.log('xdxsxxxdxdfxdx')
+  }
+
+  return clientPath
 }

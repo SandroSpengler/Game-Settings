@@ -14,9 +14,13 @@ import {
 
 import SvgIcon from '@mui/material/SvgIcon'
 import Process from '@renderer/types/Process'
+import EditIcon from '@mui/icons-material/Edit'
+
 import { Fragment, useEffect, useState } from 'react'
 import { ReactComponent as LeagueClient } from '../assets/LeagueClient.svg'
 import { ReactComponent as RiotClient } from '../assets/RiotClient.svg'
+import { client } from '@renderer/types/ClientTypes'
+import { Edit } from '@mui/icons-material'
 
 export const LeagueOfLegendsPage = () => {
   const [runningLolClients, setRunningLolClients] = useState<Process[]>([])
@@ -40,6 +44,8 @@ export const LeagueOfLegendsPage = () => {
   useEffect(() => {
     setInstallPaths()
   }, [])
+
+  useEffect(() => {})
 
   const setInstallPaths = async (): Promise<void> => {
     let leagueClientInstallPath = ''
@@ -73,6 +79,26 @@ export const LeagueOfLegendsPage = () => {
     setRunningLolClients([])
   }
 
+  const pickClientPath = async (client: client): Promise<void> => {
+    let clientPath = ''
+
+    try {
+      clientPath = await window.ProcessHandler.pickClientPath(client)
+
+      if (client === 'league') {
+        setLeagueClientInstallPath(clientPath)
+      }
+
+      if (client === 'riot') {
+        setRiotClientInstallPath(clientPath)
+      }
+
+      console.log(clientPath)
+    } catch (error) {
+      console.log('wow this didnt work')
+    }
+  }
+
   return (
     <Fragment>
       <Grid container columns={12} spacing={1} marginTop={1} paddingX={1}>
@@ -93,6 +119,24 @@ export const LeagueOfLegendsPage = () => {
                       onClick={stopAllClients}
                     >
                       <CloseIcon sx={{ height: '20px' }}></CloseIcon>
+                    </IconButton>
+                  </span>
+                </Tooltip>
+                <Tooltip title="Choose Riot Client Path">
+                  <span>
+                    <IconButton color="error" onClick={() => pickClientPath('riot')}>
+                      <SvgIcon viewBox="0 0 48 48" sx={{ height: '20px' }}>
+                        <RiotClient></RiotClient>
+                      </SvgIcon>
+                    </IconButton>
+                  </span>
+                </Tooltip>
+                <Tooltip title="Choose League Client Path">
+                  <span>
+                    <IconButton color="error" onClick={() => pickClientPath('league')}>
+                      <SvgIcon viewBox="0 0 48 48" sx={{ height: '20px' }}>
+                        <LeagueClient></LeagueClient>
+                      </SvgIcon>
                     </IconButton>
                   </span>
                 </Tooltip>

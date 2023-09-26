@@ -6,7 +6,8 @@ import {
   getLeagueClientInstallPath,
   getRiotClientInstallPath,
   getStore,
-  launchProcess
+  launchProcess,
+  pickClientPath
 } from './services/ProcessService'
 
 function createWindow(): void {
@@ -50,6 +51,7 @@ app.whenReady().then(() => {
 
   ipcMain.handle('getStore', getStore)
   ipcMain.handle('launchProcess', (_, clientCount) => launchProcess(clientCount))
+  ipcMain.handle('pickClientPath', (_, client) => pickClientPath(client))
   ipcMain.handle('getLeagueClientPath', getLeagueClientInstallPath)
   ipcMain.handle('getRiotClientPath', getRiotClientInstallPath)
 

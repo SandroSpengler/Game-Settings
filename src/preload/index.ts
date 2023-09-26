@@ -21,6 +21,7 @@ if (process.contextIsolated) {
 
       // use electron node api from the main process
       launchProcess: (clientCount) => ipcRenderer.invoke('launchProcess', clientCount),
+      pickClientPath: (client) => ipcRenderer.invoke('pickClientPath', client),
       getLeagueClientInstallPath: () => ipcRenderer.invoke('getLeagueClientPath'),
       getRiotClientInstallPath: () => ipcRenderer.invoke('getRiotClientPath'),
       getStore: () => ipcRenderer.invoke('getStore')
