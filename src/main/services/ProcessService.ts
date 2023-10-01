@@ -9,6 +9,8 @@ import fs from 'fs'
 import { client } from '../../renderer/src/types/ClientTypes'
 import { dialog } from 'electron'
 
+import LCUProperties from '../../renderer/src/interfaces/LCUProperties'
+
 export const launchProcess = async (clientCount: number): Promise<Process> => {
   const launchArgs: string[] = ['--launch-product=league_of_legends', '--launch-patchline=live']
   const settingsStore = await getStore()
@@ -190,7 +192,7 @@ export const validateLeagueClientPath = async (leagueClientPath: string): Promis
 
 export const validateRiotClientPath = async (riotClientPath: string): Promise<string> => {
   if (riotClientPath === '') {
-    throw new Error('saved client path is invalid')
+    throw new Error('client path is invalid')
   }
 
   const pathExists = fs.existsSync(riotClientPath)
@@ -208,38 +210,49 @@ export const validateRiotClientPath = async (riotClientPath: string): Promise<st
   return riotClientPath
 }
 
-export const determineLCUProperties = async (): Promise<string> => {
+export const readLCUProperties = async (): Promise<LCUProperties> => {
   const clientPath = await getLeagueClientInstallPath()
 
-  if (clientPath === '') return ''
-
-  console.log(clientPath)
+  if (clientPath === '') throw new Error('invalid League Client Path')
 
   // validate Lockfile / read it out
   // const fileContent = fs.readFileSync('C:/Riot Games/League of Legends/lockfile', {
   //   encoding: 'binary'
   // })
+  const fileContent = fs.readFileSync(`${clientPath}/lockfile`, {
+    encoding: 'binary'
+  })
+
+  const properties = fileContent.split(':')
+
+  const lcuProperties: LCUProperties = {
+    processName: properties[0],
+    processId: properties[1],
+    port: Number.parseInt(properties[2]),
+    password: properties[3],
+    protocol: properties[4]
+  }
 
   // return fileContent
 
-  return ''
+  return lcuProperties
 }
 
 export const pickClientPath = async (client: client): Promise<string> => {
-  const dialogResult = await dialog.showOpenDialog({ properties: ['openDirectory'] })
+  const dialogResult = await dialog.showOpenDialog({ properties: ['openFile'] })
 
   const clientPath = dialogResult.filePaths[0].replaceAll('\\', '/')
 
   if (client === 'league') {
-    validateLeagueClientPath(clientPath)
+    if (!clientPath.includes('LeagueClient')) {
+      throw new Error('path does not contain the league client')
+    }
   }
 
-  try {
-    if (client === 'riot') {
-      validateRiotClientPath(clientPath)
+  if (client === 'riot') {
+    if (!clientPath.includes('RiotClientServices')) {
+      throw new Error('path does not contain the riot client')
     }
-  } catch (error) {
-    console.log('xdxsxxxdxdfxdx')
   }
 
   return clientPath

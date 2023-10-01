@@ -24,6 +24,7 @@ if (process.contextIsolated) {
       pickClientPath: (client) => ipcRenderer.invoke('pickClientPath', client),
       getLeagueClientInstallPath: () => ipcRenderer.invoke('getLeagueClientPath'),
       getRiotClientInstallPath: () => ipcRenderer.invoke('getRiotClientPath'),
+      readLCUProperties: () => ipcRenderer.invoke('readLCUProperties'),
       getStore: () => ipcRenderer.invoke('getStore')
     }
 

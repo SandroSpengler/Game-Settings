@@ -7,7 +7,8 @@ import {
   getRiotClientInstallPath,
   getStore,
   launchProcess,
-  pickClientPath
+  pickClientPath,
+  readLCUProperties
 } from './services/ProcessService'
 
 function createWindow(): void {
@@ -20,7 +21,9 @@ function createWindow(): void {
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
-      sandbox: false
+      sandbox: false,
+      allowRunningInsecureContent: true,
+      webSecurity: false
     }
   })
 
@@ -54,6 +57,7 @@ app.whenReady().then(() => {
   ipcMain.handle('pickClientPath', (_, client) => pickClientPath(client))
   ipcMain.handle('getLeagueClientPath', getLeagueClientInstallPath)
   ipcMain.handle('getRiotClientPath', getRiotClientInstallPath)
+  ipcMain.handle('readLCUProperties', readLCUProperties)
 
   // Default open or close DevTools by F12 in development
   // and ignore CommandOrControl + R in production.
@@ -79,6 +83,8 @@ app.on('window-all-closed', () => {
     app.quit()
   }
 })
+
+app.commandLine.appendSwitch('ignore-certificate-errors')
 
 // In this file you can include the rest of your app"s specific main process
 // code. You can also put them in separate files and require them here.

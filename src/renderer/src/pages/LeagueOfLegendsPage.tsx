@@ -14,13 +14,15 @@ import {
 
 import SvgIcon from '@mui/material/SvgIcon'
 import Process from '@renderer/types/Process'
-import EditIcon from '@mui/icons-material/Edit'
 
+import { client } from '@renderer/types/ClientTypes'
 import { Fragment, useEffect, useState } from 'react'
 import { ReactComponent as LeagueClient } from '../assets/LeagueClient.svg'
 import { ReactComponent as RiotClient } from '../assets/RiotClient.svg'
-import { client } from '@renderer/types/ClientTypes'
-import { Edit } from '@mui/icons-material'
+
+import LCUProperties from '@renderer/interfaces/LCUProperties'
+import { getSummoner } from '@renderer/services/LCUService'
+import path from 'path'
 
 export const LeagueOfLegendsPage = () => {
   const [runningLolClients, setRunningLolClients] = useState<Process[]>([])
@@ -30,6 +32,8 @@ export const LeagueOfLegendsPage = () => {
 
   const [riotClientInstallPath, setRiotClientInstallPath] = useState<string>('')
   const [leagueClientInstallPath, setLeagueClientInstallPath] = useState<string>('')
+
+  const [leagueClientProperties, setLeagueClientProperties] = useState<LCUProperties>()
 
   useEffect(() => {
     const interval = setInterval(async () => {
@@ -45,7 +49,25 @@ export const LeagueOfLegendsPage = () => {
     setInstallPaths()
   }, [])
 
-  useEffect(() => {})
+  useEffect(() => {
+    if (runningLolClients.length === 0) return
+
+    setSummonerInformation()
+  }, [runningLolClients.length])
+
+  useEffect(() => {
+    // on lcuProperties change request summoner data from client
+  }, [leagueClientProperties])
+
+  const setSummonerInformation = async (): Promise<void> => {
+    const lcuProperties = await window.ProcessHandler.readLCUProperties()
+
+    setLeagueClientProperties(lcuProperties)
+
+    const summonerInfo = await getSummoner(lcuProperties)
+
+    console.log(summonerInfo)
+  }
 
   const setInstallPaths = async (): Promise<void> => {
     let leagueClientInstallPath = ''
@@ -86,16 +108,19 @@ export const LeagueOfLegendsPage = () => {
       clientPath = await window.ProcessHandler.pickClientPath(client)
 
       if (client === 'league') {
-        setLeagueClientInstallPath(clientPath)
+        const dirName = path.dirname(clientPath)
+        setLeagueClientInstallPath(dirName)
       }
 
       if (client === 'riot') {
-        setRiotClientInstallPath(clientPath)
-      }
+        const dirName = path.dirname(clientPath)
 
-      console.log(clientPath)
+        setRiotClientInstallPath(dirName)
+      }
     } catch (error) {
-      console.log('wow this didnt work')
+      const errorMessage = `${client}: path does not contain a client`
+
+      setLaunchError(errorMessage)
     }
   }
 
@@ -231,7 +256,7 @@ export const LeagueOfLegendsPage = () => {
 
       <Snackbar
         open={launchError === '' ? false : true}
-        autoHideDuration={6000}
+        autoHideDuration={4000}
         onClose={() => setLaunchError('')}
       >
         <Alert severity="error">{launchError} </Alert>
