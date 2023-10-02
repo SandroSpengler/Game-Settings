@@ -9,11 +9,11 @@ import { LeagueOfLegendsPage } from './pages/LeagueOfLegendsPage'
 function App(): JSX.Element {
   const [mode, setMode] = useState<PaletteMode>('dark')
 
-  const toggleColorMode = () => {
+  const toggleColorMode = (): void => {
     setMode((prevMode: PaletteMode) => (prevMode === 'light' ? 'dark' : 'light'))
   }
 
-  const getDesignTokens = (mode: PaletteMode) => {
+  const getDesignTokens = (mode: PaletteMode): PaletteOptions => {
     const palette = {
       mode,
       ...(mode === 'light'

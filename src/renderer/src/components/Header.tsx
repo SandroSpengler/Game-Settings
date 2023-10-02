@@ -11,8 +11,8 @@ interface HeaderProps {
   toggleDarkmode: () => void
 }
 
-const Header = (props: HeaderProps) => {
-  const [selectedTab, setSelectedTab] = useState<Number>(0)
+const Header = (props: HeaderProps): JSX.Element => {
+  const [selectedTab, setSelectedTab] = useState<number>(0)
 
   const navigate = useNavigate()
 
@@ -29,7 +29,7 @@ const Header = (props: HeaderProps) => {
               variant="standard"
               aria-label="basic tabs example"
               textColor="secondary"
-              onChange={(event, value) => {
+              onChange={(event, value): void => {
                 event.preventDefault()
                 setSelectedTab(value)
 

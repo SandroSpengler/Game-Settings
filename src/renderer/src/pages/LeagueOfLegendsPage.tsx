@@ -21,10 +21,9 @@ import { ReactComponent as LeagueClient } from '../assets/LeagueClient.svg'
 import { ReactComponent as RiotClient } from '../assets/RiotClient.svg'
 
 import LCUProperties from '@renderer/interfaces/LCUProperties'
-import { getSummoner } from '@renderer/services/LCUService'
 import path from 'path'
 
-export const LeagueOfLegendsPage = () => {
+export const LeagueOfLegendsPage = (): JSX.Element => {
   const [runningLolClients, setRunningLolClients] = useState<Process[]>([])
 
   const [pathError, setPathError] = useState<string>('')
@@ -42,7 +41,7 @@ export const LeagueOfLegendsPage = () => {
 
       setRunningLolClients(runningClients)
     }, 2500)
-    return () => clearInterval(interval)
+    return (): void => clearInterval(interval)
   }, [])
 
   useEffect(() => {
@@ -56,17 +55,21 @@ export const LeagueOfLegendsPage = () => {
   }, [runningLolClients.length])
 
   useEffect(() => {
+    if (!leagueClientProperties) return
+
+    console.log('requesting....')
+
     // on lcuProperties change request summoner data from client
-  }, [leagueClientProperties])
+    // ToDO
+    // Use ReactQuery
+    // const summonerInfo = await getSummoner(leagueClientProperties)
+    // console.log(summonerInfo)
+  }, [leagueClientProperties?.port])
 
   const setSummonerInformation = async (): Promise<void> => {
     const lcuProperties = await window.ProcessHandler.readLCUProperties()
 
     setLeagueClientProperties(lcuProperties)
-
-    const summonerInfo = await getSummoner(lcuProperties)
-
-    console.log(summonerInfo)
   }
 
   const setInstallPaths = async (): Promise<void> => {
@@ -75,6 +78,8 @@ export const LeagueOfLegendsPage = () => {
     try {
       leagueClientInstallPath = await window.ProcessHandler.getLeagueClientInstallPath()
       riotClientInstallPath = await window.ProcessHandler.getRiotClientInstallPath()
+
+      /* eslint-disable  @typescript-eslint/no-explicit-any */
     } catch (error: any) {
       leagueClientInstallPath = ''
       riotClientInstallPath = ''
@@ -91,6 +96,8 @@ export const LeagueOfLegendsPage = () => {
       const process = await window.ProcessHandler.launchProcess(runningLolClients.length)
 
       setRunningLolClients((prev) => [...prev, process])
+
+      /* eslint-disable  @typescript-eslint/no-explicit-any */
     } catch (error: any) {
       setLaunchError('Could not launch Client please verify install paths')
     }
@@ -149,7 +156,7 @@ export const LeagueOfLegendsPage = () => {
                 </Tooltip>
                 <Tooltip title="Choose Riot Client Path">
                   <span>
-                    <IconButton color="error" onClick={() => pickClientPath('riot')}>
+                    <IconButton color="error" onClick={(): Promise<void> => pickClientPath('riot')}>
                       <SvgIcon viewBox="0 0 48 48" sx={{ height: '20px' }}>
                         <RiotClient></RiotClient>
                       </SvgIcon>
@@ -158,7 +165,10 @@ export const LeagueOfLegendsPage = () => {
                 </Tooltip>
                 <Tooltip title="Choose League Client Path">
                   <span>
-                    <IconButton color="error" onClick={() => pickClientPath('league')}>
+                    <IconButton
+                      color="error"
+                      onClick={(): Promise<void> => pickClientPath('league')}
+                    >
                       <SvgIcon viewBox="0 0 48 48" sx={{ height: '20px' }}>
                         <LeagueClient></LeagueClient>
                       </SvgIcon>
@@ -257,7 +267,7 @@ export const LeagueOfLegendsPage = () => {
       <Snackbar
         open={launchError === '' ? false : true}
         autoHideDuration={4000}
-        onClose={() => setLaunchError('')}
+        onClose={(): void => setLaunchError('')}
       >
         <Alert severity="error">{launchError} </Alert>
       </Snackbar>

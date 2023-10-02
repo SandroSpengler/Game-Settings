@@ -15,37 +15,31 @@ export const launchProcess = async (clientCount: number): Promise<Process> => {
   const launchArgs: string[] = ['--launch-product=league_of_legends', '--launch-patchline=live']
   const settingsStore = await getStore()
 
-  let lolClient
-
   if (clientCount > 0) {
     launchArgs.push('--allow-multiple-clients')
   }
 
-  try {
-    lolClient = cp.spawn(
-      `${settingsStore.store.riotClientPath}/RiotClientServices.exe`,
-      launchArgs,
-      {
-        detached: true
-      }
-    )
-
-    lolClient.unref()
-
-    const spawnedClient: Process = {
-      cmd: lolClient.spawnargs,
-      bin: lolClient.spawnfile,
-      pid: lolClient.pid!
+  const lolClient = cp.spawn(
+    `${settingsStore.store.riotClientPath}/RiotClientServices.exe`,
+    launchArgs,
+    {
+      detached: true
     }
+  )
 
-    return spawnedClient
-  } catch (error) {
-    throw error
+  lolClient.unref()
+
+  const spawnedClient: Process = {
+    cmd: lolClient.spawnargs,
+    bin: lolClient.spawnfile,
+    pid: lolClient.pid!
   }
+
+  return spawnedClient
 }
 
 export const stopProcess = async (processes: Process[]): Promise<void> => {
-  for (let process of processes) {
+  for (const process of processes) {
     const systemProcesses = await find('pid', process.pid!)
 
     if (systemProcesses.length > 0) {
@@ -67,11 +61,12 @@ export const checkForRunningLolClients = async (
     return runningClients
   }
 
-  for (let process of runningProcesses) {
+  for (const process of runningProcesses) {
     if (process.name === 'LeagueClientUx.exe') {
       continue
     }
 
+    /* eslint-disable  @typescript-eslint/no-explicit-any */
     const binPath = (process as any).bin || ''
 
     const client: Process = {
