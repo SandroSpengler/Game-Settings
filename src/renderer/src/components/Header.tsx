@@ -62,7 +62,7 @@ const Header = (props: HeaderProps): JSX.Element => {
               <IconButton edge="start" color="inherit" aria-label="btnProfile">
                 <Person2Icon />
               </IconButton>
-              <Typography variant="h6">Skiler</Typography>
+              <Typography variant="h6"></Typography>
             </Box>
             <IconButton size="large" edge="start" color="inherit" aria-label="menu">
               <MenuIcon />

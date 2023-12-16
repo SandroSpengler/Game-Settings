@@ -5,9 +5,11 @@ import { HashRouter, Route, Routes } from 'react-router-dom'
 import Header from './components/Header'
 import HomePage from './pages/HomePage'
 import { LeagueOfLegendsPage } from './pages/LeagueOfLegendsPage'
+import { QueryClient, QueryClientProvider } from 'react-query'
 
 function App(): JSX.Element {
   const [mode, setMode] = useState<PaletteMode>('dark')
+  const queryClient = new QueryClient()
 
   const toggleColorMode = (): void => {
     setMode((prevMode: PaletteMode) => (prevMode === 'light' ? 'dark' : 'light'))
@@ -75,12 +77,14 @@ function App(): JSX.Element {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <HashRouter>
-        <Header toggleDarkmode={toggleColorMode}></Header>
-        <Routes>
-          <Route path="/" Component={HomePage}></Route>
-          <Route path="/home" element={<HomePage />}></Route>
-          <Route path="/lol" Component={LeagueOfLegendsPage}></Route>
-        </Routes>
+        <QueryClientProvider client={queryClient}>
+          <Header toggleDarkmode={toggleColorMode}></Header>
+          <Routes>
+            <Route path="/" Component={HomePage}></Route>
+            <Route path="/home" element={<HomePage />}></Route>
+            <Route path="/lol" Component={LeagueOfLegendsPage}></Route>
+          </Routes>
+        </QueryClientProvider>
       </HashRouter>
     </ThemeProvider>
   )

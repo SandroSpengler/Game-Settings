@@ -3,7 +3,7 @@ import { client } from './ClientTypes'
 import Process from './Process'
 import SettingsStore from './SettingsStore'
 
-type ProcessHandler = {
+export type ProcessHandler = {
   stopProcess: (processes: Process[]) => Promise<void>
   checkForRunningLolClients: (runningLolClients: Process[]) => Promise<Process[]>
   // main process

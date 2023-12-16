@@ -12,6 +12,8 @@ import {
   Typography
 } from '@mui/material'
 
+import FileDownloadIcon from '@mui/icons-material/FileDownload'
+
 import SvgIcon from '@mui/material/SvgIcon'
 import Process from '@renderer/types/Process'
 
@@ -20,7 +22,12 @@ import { Fragment, useEffect, useState } from 'react'
 import { ReactComponent as LeagueClient } from '../assets/LeagueClient.svg'
 import { ReactComponent as RiotClient } from '../assets/RiotClient.svg'
 
+import ClientSettings from '@renderer/components/ClientSettings'
+import SummonerInfo from '@renderer/components/SummonerInfo'
+import LCUGameSettings from '@renderer/interfaces/LCUClientSettings'
 import LCUProperties from '@renderer/interfaces/LCUProperties'
+import { getGameSettings } from '@renderer/services/LCUService'
+import ProcessHandler from '@renderer/types/ProcessHandler'
 import path from 'path'
 
 export const LeagueOfLegendsPage = (): JSX.Element => {
@@ -33,11 +40,13 @@ export const LeagueOfLegendsPage = (): JSX.Element => {
   const [leagueClientInstallPath, setLeagueClientInstallPath] = useState<string>('')
 
   const [leagueClientProperties, setLeagueClientProperties] = useState<LCUProperties>()
+  const [lcuGameSettings, setLcuGameSettings] = useState<LCUGameSettings>()
+
+  const ProcessHandler = window.ProcessHandler as ProcessHandler
 
   useEffect(() => {
     const interval = setInterval(async () => {
-      const runningClients =
-        await window.ProcessHandler.checkForRunningLolClients(runningLolClients)
+      const runningClients = await ProcessHandler.checkForRunningLolClients(runningLolClients)
 
       setRunningLolClients(runningClients)
     }, 2500)
@@ -54,21 +63,25 @@ export const LeagueOfLegendsPage = (): JSX.Element => {
     setSummonerInformation()
   }, [runningLolClients.length])
 
-  useEffect(() => {
-    if (!leagueClientProperties) return
+  const exportLCUCLientSettings = async (): Promise<void> => {
+    const jsonString = `data:text/json;chatset=utf-8,${encodeURIComponent(
+      JSON.stringify(lcuGameSettings)
+    )}`
 
-    console.log('requesting....')
+    const link = document.createElement('a')
+    link.href = jsonString
+    link.download = 'settings.json'
 
-    // on lcuProperties change request summoner data from client
-    // ToDO
-    // Use ReactQuery
-    // const summonerInfo = await getSummoner(leagueClientProperties)
-    // console.log(summonerInfo)
-  }, [leagueClientProperties?.port])
+    link.click()
+  }
 
   const setSummonerInformation = async (): Promise<void> => {
-    const lcuProperties = await window.ProcessHandler.readLCUProperties()
+    const lcuProperties = await ProcessHandler.readLCUProperties()
+    const lcuSettings = await getGameSettings(lcuProperties)
 
+    // ToDo
+    // add loading client information indicator
+    setLcuGameSettings(lcuSettings)
     setLeagueClientProperties(lcuProperties)
   }
 
@@ -76,8 +89,8 @@ export const LeagueOfLegendsPage = (): JSX.Element => {
     let leagueClientInstallPath = ''
     let riotClientInstallPath = ''
     try {
-      leagueClientInstallPath = await window.ProcessHandler.getLeagueClientInstallPath()
-      riotClientInstallPath = await window.ProcessHandler.getRiotClientInstallPath()
+      leagueClientInstallPath = await ProcessHandler.getLeagueClientInstallPath()
+      riotClientInstallPath = await ProcessHandler.getRiotClientInstallPath()
 
       /* eslint-disable  @typescript-eslint/no-explicit-any */
     } catch (error: any) {
@@ -93,7 +106,7 @@ export const LeagueOfLegendsPage = (): JSX.Element => {
 
   const launchLolClient = async (): Promise<void> => {
     try {
-      const process = await window.ProcessHandler.launchProcess(runningLolClients.length)
+      const process = await ProcessHandler.launchProcess(runningLolClients.length)
 
       setRunningLolClients((prev) => [...prev, process])
 
@@ -104,7 +117,7 @@ export const LeagueOfLegendsPage = (): JSX.Element => {
   }
 
   const stopAllClients = async (): Promise<void> => {
-    await window.ProcessHandler.stopProcess(runningLolClients)
+    await ProcessHandler.stopProcess(runningLolClients)
     setRunningLolClients([])
   }
 
@@ -112,10 +125,11 @@ export const LeagueOfLegendsPage = (): JSX.Element => {
     let clientPath = ''
 
     try {
-      clientPath = await window.ProcessHandler.pickClientPath(client)
+      clientPath = await ProcessHandler.pickClientPath(client)
 
       if (client === 'league') {
         const dirName = path.dirname(clientPath)
+        // updateSettingsStore
         setLeagueClientInstallPath(dirName)
       }
 
@@ -175,23 +189,20 @@ export const LeagueOfLegendsPage = (): JSX.Element => {
                     </IconButton>
                   </span>
                 </Tooltip>
+                <Tooltip title="Export Client Settings">
+                  <span>
+                    <IconButton onClick={exportLCUCLientSettings}>
+                      <FileDownloadIcon sx={{ height: '20px' }} />
+                    </IconButton>
+                  </span>
+                </Tooltip>
               </Stack>
             </Paper>
           </Box>
         </Grid>
 
         <Grid item xs={5}>
-          <Box>
-            <Paper sx={{ display: 'flex', padding: '10px' }}>
-              <Tooltip title="Currently running Clients">
-                <Stack direction="row" alignItems="center" gap={3}>
-                  <Typography variant="h6" fontSize={22}>
-                    mh370 abduct ufo
-                  </Typography>
-                </Stack>
-              </Tooltip>
-            </Paper>
-          </Box>
+          {leagueClientProperties ? <SummonerInfo LCUProperties={leagueClientProperties} /> : null}
         </Grid>
         <Grid item xs={1}>
           <Box>
@@ -257,6 +268,9 @@ export const LeagueOfLegendsPage = (): JSX.Element => {
               </Tooltip>
             </Paper>
           </Box>
+        </Grid>
+        <Grid item xs={12}>
+          <ClientSettings />
         </Grid>
       </Grid>
 
