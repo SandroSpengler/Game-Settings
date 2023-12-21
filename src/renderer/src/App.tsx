@@ -1,11 +1,21 @@
-import { CssBaseline, PaletteMode, PaletteOptions, ThemeProvider, createTheme } from '@mui/material'
+import {
+  Button,
+  CssBaseline,
+  IconButton,
+  PaletteMode,
+  PaletteOptions,
+  ThemeProvider,
+  createTheme
+} from '@mui/material'
 
+import { SnackbarProvider, closeSnackbar } from 'notistack'
 import { useState } from 'react'
+import { QueryClient, QueryClientProvider } from 'react-query'
 import { HashRouter, Route, Routes } from 'react-router-dom'
 import Header from './components/Header'
 import HomePage from './pages/HomePage'
 import { LeagueOfLegendsPage } from './pages/LeagueOfLegendsPage'
-import { QueryClient, QueryClientProvider } from 'react-query'
+import CloseIcon from '@mui/icons-material/Close'
 
 function App(): JSX.Element {
   const [mode, setMode] = useState<PaletteMode>('dark')
@@ -74,19 +84,29 @@ function App(): JSX.Element {
   })
 
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <HashRouter>
-        <QueryClientProvider client={queryClient}>
-          <Header toggleDarkmode={toggleColorMode}></Header>
-          <Routes>
-            <Route path="/" Component={HomePage}></Route>
-            <Route path="/home" element={<HomePage />}></Route>
-            <Route path="/lol" Component={LeagueOfLegendsPage}></Route>
-          </Routes>
-        </QueryClientProvider>
-      </HashRouter>
-    </ThemeProvider>
+    <SnackbarProvider
+      autoHideDuration={5000}
+      preventDuplicate={true}
+      action={(snackbarId) => (
+        <IconButton onClick={() => closeSnackbar(snackbarId)}>
+          <CloseIcon sx={{ height: '20px' }}></CloseIcon>
+        </IconButton>
+      )}
+    >
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <HashRouter>
+          <QueryClientProvider client={queryClient}>
+            <Header toggleDarkmode={toggleColorMode}></Header>
+            <Routes>
+              <Route path="/" Component={HomePage}></Route>
+              <Route path="/home" element={<HomePage />}></Route>
+              <Route path="/lol" Component={LeagueOfLegendsPage}></Route>
+            </Routes>
+          </QueryClientProvider>
+        </HashRouter>
+      </ThemeProvider>
+    </SnackbarProvider>
   )
 }
 

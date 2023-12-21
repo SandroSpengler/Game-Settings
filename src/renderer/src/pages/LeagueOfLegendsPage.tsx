@@ -1,16 +1,6 @@
 import CloseIcon from '@mui/icons-material/Close'
 import RocketLaunchIcon from '@mui/icons-material/RocketLaunch'
-import {
-  Alert,
-  Box,
-  Grid,
-  IconButton,
-  Paper,
-  Snackbar,
-  Stack,
-  Tooltip,
-  Typography
-} from '@mui/material'
+import { Box, Grid, IconButton, Paper, Stack, Tooltip, Typography } from '@mui/material'
 
 import FileDownloadIcon from '@mui/icons-material/FileDownload'
 
@@ -28,13 +18,11 @@ import LCUGameSettings from '@renderer/interfaces/LCUClientSettings'
 import LCUProperties from '@renderer/interfaces/LCUProperties'
 import { getGameSettings } from '@renderer/services/LCUService'
 import ProcessHandler from '@renderer/types/ProcessHandler'
+import { enqueueSnackbar } from 'notistack'
 import path from 'path'
 
 export const LeagueOfLegendsPage = (): JSX.Element => {
   const [runningLolClients, setRunningLolClients] = useState<Process[]>([])
-
-  const [pathError, setPathError] = useState<string>('')
-  const [launchError, setLaunchError] = useState<string>('')
 
   const [riotClientInstallPath, setRiotClientInstallPath] = useState<string>('')
   const [leagueClientInstallPath, setLeagueClientInstallPath] = useState<string>('')
@@ -44,17 +32,20 @@ export const LeagueOfLegendsPage = (): JSX.Element => {
 
   const ProcessHandler = window.ProcessHandler as ProcessHandler
 
+  //#region useEffect
+
+  useEffect(() => {
+    setInstallPaths()
+  }, [])
+
   useEffect(() => {
     const interval = setInterval(async () => {
       const runningClients = await ProcessHandler.checkForRunningLolClients(runningLolClients)
 
       setRunningLolClients(runningClients)
     }, 2500)
-    return (): void => clearInterval(interval)
-  }, [])
 
-  useEffect(() => {
-    setInstallPaths()
+    return (): void => clearInterval(interval)
   }, [])
 
   useEffect(() => {
@@ -63,56 +54,55 @@ export const LeagueOfLegendsPage = (): JSX.Element => {
     setSummonerInformation()
   }, [runningLolClients.length])
 
-  const exportLCUCLientSettings = async (): Promise<void> => {
-    const jsonString = `data:text/json;chatset=utf-8,${encodeURIComponent(
-      JSON.stringify(lcuGameSettings)
-    )}`
-
-    const link = document.createElement('a')
-    link.href = jsonString
-    link.download = 'settings.json'
-
-    link.click()
-  }
-
-  const setSummonerInformation = async (): Promise<void> => {
-    const lcuProperties = await ProcessHandler.readLCUProperties()
-    const lcuSettings = await getGameSettings(lcuProperties)
-
-    // ToDo
-    // add loading client information indicator
-    setLcuGameSettings(lcuSettings)
-    setLeagueClientProperties(lcuProperties)
-  }
-
   const setInstallPaths = async (): Promise<void> => {
     let leagueClientInstallPath = ''
     let riotClientInstallPath = ''
+
     try {
       leagueClientInstallPath = await ProcessHandler.getLeagueClientInstallPath()
-      riotClientInstallPath = await ProcessHandler.getRiotClientInstallPath()
-
-      /* eslint-disable  @typescript-eslint/no-explicit-any */
     } catch (error: any) {
       leagueClientInstallPath = ''
+
+      enqueueSnackbar('League of Legends install path was not found', { variant: 'error' })
+    }
+
+    try {
+      riotClientInstallPath = await ProcessHandler.getRiotClientInstallPath()
+    } catch (error: any) {
       riotClientInstallPath = ''
 
-      setPathError(error.message)
-    } finally {
-      setLeagueClientInstallPath(leagueClientInstallPath)
-      setRiotClientInstallPath(riotClientInstallPath)
+      enqueueSnackbar('Riot Games install path was not found', { variant: 'error' })
+    }
+
+    setLeagueClientInstallPath(leagueClientInstallPath)
+    setRiotClientInstallPath(riotClientInstallPath)
+  }
+
+  const setSummonerInformation = async (): Promise<void> => {
+    try {
+      const lcuProperties = await ProcessHandler.readLCUProperties()
+      const lcuSettings = await getGameSettings(lcuProperties)
+
+      // ToDo
+      // add loading client information indicator
+      setLcuGameSettings(lcuSettings)
+      setLeagueClientProperties(lcuProperties)
+    } catch (error: any) {
+      alert(error.message)
     }
   }
 
+  //#endregion
+
+  //#region UI-Buttons
   const launchLolClient = async (): Promise<void> => {
     try {
       const process = await ProcessHandler.launchProcess(runningLolClients.length)
 
       setRunningLolClients((prev) => [...prev, process])
-
-      /* eslint-disable  @typescript-eslint/no-explicit-any */
     } catch (error: any) {
-      setLaunchError('Could not launch Client please verify install paths')
+      // ToDo
+      // Handle Launch Error
     }
   }
 
@@ -128,22 +118,31 @@ export const LeagueOfLegendsPage = (): JSX.Element => {
       clientPath = await ProcessHandler.pickClientPath(client)
 
       if (client === 'league') {
-        const dirName = path.dirname(clientPath)
-        // updateSettingsStore
-        setLeagueClientInstallPath(dirName)
+        setLeagueClientInstallPath(clientPath)
       }
 
       if (client === 'riot') {
-        const dirName = path.dirname(clientPath)
-
-        setRiotClientInstallPath(dirName)
+        setRiotClientInstallPath(clientPath)
       }
     } catch (error) {
       const errorMessage = `${client}: path does not contain a client`
 
-      setLaunchError(errorMessage)
+      enqueueSnackbar(errorMessage, { variant: 'error' })
     }
   }
+
+  const exportLCUCLientSettings = (): void => {
+    const jsonString = `data:text/json;chatset=utf-8,${encodeURIComponent(
+      JSON.stringify(lcuGameSettings)
+    )}`
+
+    const link = document.createElement('a')
+    link.href = jsonString
+    link.download = 'settings.json'
+
+    link.click()
+  }
+  //#endregion
 
   return (
     <Fragment>
@@ -260,7 +259,6 @@ export const LeagueOfLegendsPage = (): JSX.Element => {
                       <RiotClient></RiotClient>
                     </SvgIcon>
                     <Typography variant="h6" fontSize={18}>
-                      {/* C:/Riot Games/Riot Client/RiotClientServices.exe */}
                       {riotClientInstallPath}
                     </Typography>
                   </Stack>
@@ -274,17 +272,17 @@ export const LeagueOfLegendsPage = (): JSX.Element => {
         </Grid>
       </Grid>
 
-      <Snackbar open={pathError === '' ? false : true} autoHideDuration={6000}>
-        <Alert severity="error">{pathError.split(':')[2]}</Alert>
+      {/* <Snackbar open={pathError === '' ? false : true} autoHideDuration={3000}>
+        <Alert severity="error" onClose={() => setPathError('')}>
+          {pathError.split(':')[2]}
+        </Alert>
       </Snackbar>
 
-      <Snackbar
-        open={launchError === '' ? false : true}
-        autoHideDuration={4000}
-        onClose={(): void => setLaunchError('')}
-      >
-        <Alert severity="error">{launchError} </Alert>
-      </Snackbar>
+      <Snackbar open={launchError === '' ? false : true} autoHideDuration={3000}>
+        <Alert severity="error" onClose={() => setLaunchError('')}>
+          {launchError}
+        </Alert>
+      </Snackbar> */}
     </Fragment>
   )
 }

@@ -10,6 +10,7 @@ import { client } from '../../renderer/src/types/ClientTypes'
 import { dialog } from 'electron'
 
 import LCUProperties from '../../renderer/src/interfaces/LCUProperties'
+import path from 'path'
 
 export const launchProcess = async (clientCount: number): Promise<Process> => {
   const launchArgs: string[] = ['--launch-product=league_of_legends', '--launch-patchline=live']
@@ -93,6 +94,7 @@ export const getLeagueClientInstallPath = async (): Promise<string> => {
   let needToResetPath = false
   let errorMessage = ''
 
+  // check path saved in store
   try {
     await validateLeagueClientPath(settingsStore.store.leagueClientPath)
 
@@ -104,13 +106,15 @@ export const getLeagueClientInstallPath = async (): Promise<string> => {
     errorMessage = error.message
   }
 
+  // determine league of legends path automatically
   try {
     await validateLeagueClientPath('C:/Riot Games/League of Legends')
 
     needToResetPath = false
+
     settingsStore.set('leagueClientPath', 'C:/Riot Games/League of Legends')
   } catch (error) {
-    errorMessage = 'could not determine League of Legends install path'
+    errorMessage = 'Could not determine League of Legends install path'
     needToResetPath = true
   }
 
@@ -210,10 +214,6 @@ export const readLCUProperties = async (): Promise<LCUProperties> => {
 
   if (clientPath === '') throw new Error('invalid League Client Path')
 
-  // validate Lockfile / read it out
-  // const fileContent = fs.readFileSync('C:/Riot Games/League of Legends/lockfile', {
-  //   encoding: 'binary'
-  // })
   const fileContent = fs.readFileSync(`${clientPath}/lockfile`, {
     encoding: 'binary'
   })
@@ -235,20 +235,28 @@ export const readLCUProperties = async (): Promise<LCUProperties> => {
 
 export const pickClientPath = async (client: client): Promise<string> => {
   const dialogResult = await dialog.showOpenDialog({ properties: ['openFile'] })
+  const settingsStore = await getStore()
 
   const clientPath = dialogResult.filePaths[0].replaceAll('\\', '/')
+  let dirName = ''
 
   if (client === 'league') {
     if (!clientPath.includes('LeagueClient')) {
       throw new Error('path does not contain the league client')
     }
+
+    dirName = path.dirname(clientPath)
+    settingsStore.set('leagueClientPath', dirName)
   }
 
   if (client === 'riot') {
     if (!clientPath.includes('RiotClientServices')) {
       throw new Error('path does not contain the riot client')
     }
+
+    dirName = path.dirname(clientPath)
+    settingsStore.set('riotClientPath', dirName)
   }
 
-  return clientPath
+  return dirName
 }
