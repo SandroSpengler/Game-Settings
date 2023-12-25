@@ -1,5 +1,4 @@
 import {
-  Button,
   CssBaseline,
   IconButton,
   PaletteMode,
@@ -8,6 +7,7 @@ import {
   createTheme
 } from '@mui/material'
 
+import CloseIcon from '@mui/icons-material/Close'
 import { SnackbarProvider, closeSnackbar } from 'notistack'
 import { useState } from 'react'
 import { QueryClient, QueryClientProvider } from 'react-query'
@@ -15,7 +15,6 @@ import { HashRouter, Route, Routes } from 'react-router-dom'
 import Header from './components/Header'
 import HomePage from './pages/HomePage'
 import { LeagueOfLegendsPage } from './pages/LeagueOfLegendsPage'
-import CloseIcon from '@mui/icons-material/Close'
 
 function App(): JSX.Element {
   const [mode, setMode] = useState<PaletteMode>('dark')

@@ -4,6 +4,7 @@ import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import {
   getLeagueClientInstallPath,
+  getOSInformation,
   getRiotClientInstallPath,
   getStore,
   launchProcess,
@@ -57,6 +58,7 @@ app.whenReady().then(() => {
   ipcMain.handle('pickClientPath', (_, client) => pickClientPath(client))
   ipcMain.handle('getLeagueClientPath', getLeagueClientInstallPath)
   ipcMain.handle('getRiotClientPath', getRiotClientInstallPath)
+  ipcMain.handle('getOSInformation', getOSInformation)
   ipcMain.handle('readLCUProperties', readLCUProperties)
 
   // Default open or close DevTools by F12 in development

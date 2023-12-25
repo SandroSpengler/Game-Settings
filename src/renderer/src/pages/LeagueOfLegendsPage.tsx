@@ -9,8 +9,9 @@ import Process from '@renderer/types/Process'
 
 import { client } from '@renderer/types/ClientTypes'
 import { Fragment, useEffect, useState } from 'react'
-import { ReactComponent as LeagueClient } from '../assets/LeagueClient.svg'
-import { ReactComponent as RiotClient } from '../assets/RiotClient.svg'
+
+import { ReactComponent as LeagueClient } from '../assets/Logo/LeagueClient.svg'
+import { ReactComponent as RiotClient } from '../assets/Logo/RiotClient.svg'
 
 import ClientSettings from '@renderer/components/ClientSettings'
 import SummonerInfo from '@renderer/components/SummonerInfo'
@@ -19,7 +20,6 @@ import LCUProperties from '@renderer/interfaces/LCUProperties'
 import { getGameSettings } from '@renderer/services/LCUService'
 import ProcessHandler from '@renderer/types/ProcessHandler'
 import { enqueueSnackbar } from 'notistack'
-import path from 'path'
 
 export const LeagueOfLegendsPage = (): JSX.Element => {
   const [runningLolClients, setRunningLolClients] = useState<Process[]>([])
@@ -39,20 +39,18 @@ export const LeagueOfLegendsPage = (): JSX.Element => {
   }, [])
 
   useEffect(() => {
-    const interval = setInterval(async () => {
-      const runningClients = await ProcessHandler.checkForRunningLolClients(runningLolClients)
-
-      setRunningLolClients(runningClients)
-    }, 2500)
-
-    return (): void => clearInterval(interval)
+    // const interval = setInterval(async () => {
+    //   const runningClients = await ProcessHandler.checkForRunningLolClients(runningLolClients)
+    //   setRunningLolClients(runningClients)
+    // }, 2500)
+    // return (): void => clearInterval(interval)
   }, [])
 
-  useEffect(() => {
-    if (runningLolClients.length === 0) return
+  // useEffect(() => {
+  //   if (runningLolClients.length === 0) return
 
-    setSummonerInformation()
-  }, [runningLolClients.length])
+  //   setSummonerInformation()
+  // }, [runningLolClients.length])
 
   const setInstallPaths = async (): Promise<void> => {
     let leagueClientInstallPath = ''
@@ -237,8 +235,9 @@ export const LeagueOfLegendsPage = (): JSX.Element => {
                       <LeagueClient></LeagueClient>
                     </SvgIcon>
                     <Typography variant="h6" fontSize={18}>
-                      {/* C:/Riot Games/Riot Client/RiotClientServices.exe */}
-                      {leagueClientInstallPath}
+                      {leagueClientInstallPath === ''
+                        ? 'no path was found'
+                        : leagueClientInstallPath}
                     </Typography>
                   </Stack>
                 </Box>
@@ -259,7 +258,7 @@ export const LeagueOfLegendsPage = (): JSX.Element => {
                       <RiotClient></RiotClient>
                     </SvgIcon>
                     <Typography variant="h6" fontSize={18}>
-                      {riotClientInstallPath}
+                      {riotClientInstallPath === '' ? 'no path was found' : riotClientInstallPath}
                     </Typography>
                   </Stack>
                 </Box>
