@@ -20,6 +20,7 @@ import LCUProperties from '@renderer/interfaces/LCUProperties'
 import { getGameSettings } from '@renderer/services/LCUService'
 import ProcessHandler from '@renderer/types/ProcessHandler'
 import { enqueueSnackbar } from 'notistack'
+import './LeagueOfLegendsPage.css'
 
 export const LeagueOfLegendsPage = (): JSX.Element => {
   const [runningLolClients, setRunningLolClients] = useState<Process[]>([])
@@ -39,52 +40,80 @@ export const LeagueOfLegendsPage = (): JSX.Element => {
   }, [])
 
   useEffect(() => {
-    // const interval = setInterval(async () => {
-    //   const runningClients = await ProcessHandler.checkForRunningLolClients(runningLolClients)
-    //   setRunningLolClients(runningClients)
-    // }, 2500)
-    // return (): void => clearInterval(interval)
+    const interval = setInterval(async () => {
+      const runningClients = await ProcessHandler.checkForRunningLolClients(runningLolClients)
+      setRunningLolClients(runningClients)
+    }, 2500)
+    return (): void => clearInterval(interval)
   }, [])
 
-  // useEffect(() => {
-  //   if (runningLolClients.length === 0) return
+  useEffect(() => {
+    if (runningLolClients.length === 0) return
 
-  //   setSummonerInformation()
-  // }, [runningLolClients.length])
+    setSummonerInformation()
+  }, [123])
 
   const setInstallPaths = async (): Promise<void> => {
     let leagueClientInstallPath = ''
     let riotClientInstallPath = ''
 
     try {
+      riotClientInstallPath = await ProcessHandler.getRiotClientInstallPath()
+    } catch (error) {
+      riotClientInstallPath = ''
+
+      enqueueSnackbar('Riot Games install path was not found, please select the install path', {
+        variant: 'error'
+      })
+    }
+
+    try {
       leagueClientInstallPath = await ProcessHandler.getLeagueClientInstallPath()
-    } catch (error: any) {
+    } catch (error) {
       leagueClientInstallPath = ''
 
       enqueueSnackbar('League of Legends install path was not found', { variant: 'error' })
     }
 
     try {
-      riotClientInstallPath = await ProcessHandler.getRiotClientInstallPath()
-    } catch (error: any) {
-      riotClientInstallPath = ''
+      const runningClients = await ProcessHandler.checkForRunningLolClients([])
 
-      enqueueSnackbar('Riot Games install path was not found', { variant: 'error' })
+      if (runningClients.length > 0) {
+        // TODO
+        // Determine Install Path automatically
+        leagueClientInstallPath = await ProcessHandler.determineLeagueClientInstallPath()
+      } else {
+        enqueueSnackbar(
+          'Please select the LoL-Client path or launch a client and restart the application',
+          {
+            variant: 'info'
+          }
+        )
+      }
+    } catch (error) {
+      leagueClientInstallPath = ''
+
+      enqueueSnackbar('Automatically determining League of Legends install path failed', {
+        variant: 'error'
+      })
     }
 
     setLeagueClientInstallPath(leagueClientInstallPath)
     setRiotClientInstallPath(riotClientInstallPath)
   }
 
+  // @typescript-eslint/no-unused-vars
   const setSummonerInformation = async (): Promise<void> => {
     try {
       const lcuProperties = await ProcessHandler.readLCUProperties()
       const lcuSettings = await getGameSettings(lcuProperties)
 
-      // ToDo
+      // TODO
       // add loading client information indicator
       setLcuGameSettings(lcuSettings)
       setLeagueClientProperties(lcuProperties)
+
+      /* eslint-disable  @typescript-eslint/no-explicit-any */
     } catch (error: any) {
       alert(error.message)
     }
@@ -98,8 +127,8 @@ export const LeagueOfLegendsPage = (): JSX.Element => {
       const process = await ProcessHandler.launchProcess(runningLolClients.length)
 
       setRunningLolClients((prev) => [...prev, process])
-    } catch (error: any) {
-      // ToDo
+    } catch (error) {
+      // TODO
       // Handle Launch Error
     }
   }

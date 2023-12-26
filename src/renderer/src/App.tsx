@@ -4,11 +4,12 @@ import {
   PaletteMode,
   PaletteOptions,
   ThemeProvider,
-  createTheme
+  createTheme,
+  styled
 } from '@mui/material'
 
 import CloseIcon from '@mui/icons-material/Close'
-import { SnackbarProvider, closeSnackbar } from 'notistack'
+import { MaterialDesignContent, SnackbarProvider, closeSnackbar } from 'notistack'
 import { useState } from 'react'
 import { QueryClient, QueryClientProvider } from 'react-query'
 import { HashRouter, Route, Routes } from 'react-router-dom'
@@ -82,12 +83,32 @@ function App(): JSX.Element {
     }
   })
 
+  const StyledMaterialDesignContent = styled(MaterialDesignContent)(() => ({
+    '&.notistack-MuiContent-success': {
+      color: '#2e2d2d',
+      fontSize: '16px'
+    },
+    '&.notistack-MuiContent-error': {
+      color: '#2e2d2d',
+      fontSize: '16px'
+    },
+    '&.notistack-MuiContent-info': {
+      color: '#2e2d2d',
+      fontSize: '16px'
+    }
+  }))
+
   return (
     <SnackbarProvider
       autoHideDuration={5000}
       preventDuplicate={true}
-      action={(snackbarId) => (
-        <IconButton onClick={() => closeSnackbar(snackbarId)}>
+      Components={{
+        success: StyledMaterialDesignContent,
+        error: StyledMaterialDesignContent,
+        info: StyledMaterialDesignContent
+      }}
+      action={(snackbarId): JSX.Element => (
+        <IconButton onClick={(): void => closeSnackbar(snackbarId)}>
           <CloseIcon sx={{ height: '20px' }}></CloseIcon>
         </IconButton>
       )}

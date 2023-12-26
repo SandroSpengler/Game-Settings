@@ -58,9 +58,23 @@ export const checkForRunningLolClients = async (
 ): Promise<Process[]> => {
   // regex all: (.*?)
 
-  // check for platform
-  // const runningProcesses = await find('name', 'LeagueClient.exe')
-  const runningProcesses = await find('name', 'LeagueClient')
+  const osInfo = getOSInformation()
+
+  let runningProcesses: Awaited<ReturnType<typeof find>> = []
+
+  if (osInfo.platform === 'win32') {
+    runningProcesses = await find('name', 'LeagueClient.exe')
+
+    console.log(runningProcesses)
+  }
+
+  if (osInfo.platform === 'darwin') {
+    runningProcesses = await find('name', 'LeagueClient')
+  }
+
+  if (osInfo.platform === 'linux') {
+    return []
+  }
 
   const runningClients: Process[] = runningLolClients
 
@@ -69,10 +83,16 @@ export const checkForRunningLolClients = async (
   }
 
   for (const process of runningProcesses) {
-    // if (process.name === 'LeagueClientUx.exe') {
+    if (osInfo.platform === 'win32') {
+      if (process.name === 'LeagueClientUx.exe') {
+        continue
+      }
+    }
 
-    if (process.name === 'LeagueClientUx') {
-      continue
+    if (osInfo.platform === 'darwin') {
+      if (process.name === 'LeagueClientUx') {
+        continue
+      }
     }
 
     /* eslint-disable  @typescript-eslint/no-explicit-any */
@@ -100,44 +120,45 @@ export const checkForRunningLolClients = async (
 export const getLeagueClientInstallPath = async (): Promise<string> => {
   const osInfo = getOSInformation()
 
+  const settingsStore = await getStore()
+
+  const leagueInstallPath = settingsStore.get('leagueClientPath')
+
+  const validPath = isValidLCUPath(leagueInstallPath, osInfo.platform === 'darwin')
+
+  if (!validPath) {
+    // TODO
+    // check the default install path for each os
+
+    settingsStore.set('leagueClientPath', '')
+
+    throw new Error('could not determine client path automatically')
+  }
+
+  settingsStore.set('leagueClientPath', leagueInstallPath)
+
+  return settingsStore.store.leagueClientPath
+}
+
+export const determineLeagueClientPath = async (): Promise<string> => {
+  const osInfo = getOSInformation()
+  const settingsStore = await getStore()
+
   const leagueInstallPath = await getLCUPathFromProcess(osInfo.platform)
 
-  console.log(leagueInstallPath)
-  console.log(isValidLCUPath(leagueInstallPath, osInfo.platform === 'darwin'))
+  if (settingsStore.get('leagueClientPath') === leagueInstallPath) {
+    return settingsStore.get('leagueClientPath')
+  }
 
-  const settingsStore = await getStore()
-  // let needToResetPath = false
-  // let errorMessage = ''
+  const validPath = isValidLCUPath(leagueInstallPath, osInfo.platform === 'darwin')
 
-  // // check path saved in store
-  // try {
-  //   await validateLeagueClientPath(settingsStore.store.leagueClientPath)
+  if (!validPath) {
+    settingsStore.set('leagueClientPath', '')
 
-  //   needToResetPath = false
+    throw new Error('could not determine client path automatically')
+  }
 
-  //   return settingsStore.store.leagueClientPath
-  // } catch (error: any) {
-  //   needToResetPath = true
-  //   errorMessage = error.message
-  // }
-
-  // // determine league of legends path automatically
-  // try {
-  //   await validateLeagueClientPath('C:/Riot Games/League of Legends')
-
-  //   needToResetPath = false
-
-  //   settingsStore.set('leagueClientPath', 'C:/Riot Games/League of Legends')
-  // } catch (error) {
-  //   errorMessage = 'Could not determine League of Legends install path'
-  //   needToResetPath = true
-  // }
-
-  // if (needToResetPath) {
-  //   settingsStore.set('leagueClientPath', '')
-
-  //   throw new Error(errorMessage)
-  // }
+  settingsStore.set('leagueClientPath', leagueInstallPath)
 
   return settingsStore.store.leagueClientPath
 }
@@ -177,31 +198,11 @@ export const getRiotClientInstallPath = async (): Promise<string> => {
 }
 
 export const getStore = async (): Promise<Store<SettingsStore>> => {
-  // ToDo
+  // TODO
   // Handle validation error -> store corrupt -> reset store
   const store = new Store({ schema: StoreSettingsSchema })
 
   return store
-}
-
-export const validateLeagueClientPath = async (leagueClientPath: string): Promise<string> => {
-  if (leagueClientPath === '') {
-    throw new Error('saved client path is invalid')
-  }
-
-  const pathExists = fs.existsSync(leagueClientPath)
-
-  if (!pathExists) {
-    throw new Error('saved client path is invalid')
-  }
-
-  const LeagueClientExsits = fs.existsSync(`${leagueClientPath}/LeagueClient.exe`)
-
-  if (!LeagueClientExsits) {
-    throw new Error('saved client path is invalid')
-  }
-
-  return leagueClientPath
 }
 
 export const validateRiotClientPath = async (riotClientPath: string): Promise<string> => {
@@ -283,7 +284,7 @@ export const pickClientPath = async (client: client): Promise<string> => {
  * @see https://github.com/Pupix/lcu-connector/tree/master
  *
  */
-export const getLCUPathFromProcess = async (platform: string): Promise<string> => {
+export const getLCUPathFromProcess = async (platform: string): Promise<string | undefined> => {
   const IS_WIN = platform === 'win32'
   // const IS_MAC = process.platform === 'darwin'
   const IS_WSL = platform === 'linux' && os.release().toLowerCase().includes('microsoft')
@@ -314,7 +315,7 @@ export const getLCUPathFromProcess = async (platform: string): Promise<string> =
   return dirPath
 }
 
-export const isValidLCUPath = (dirPath: string, isMac: boolean): boolean => {
+export const isValidLCUPath = (dirPath: string | undefined, isMac: boolean): boolean => {
   if (!dirPath) {
     return false
   }
@@ -330,7 +331,7 @@ export const isValidLCUPath = (dirPath: string, isMac: boolean): boolean => {
   return isGlobal || isCN || isGarena
 }
 
-// ToDo:
+// TODO:
 // Custom types
 export const getOSInformation = (): OSInformation => {
   const type = os.type()

@@ -3,6 +3,7 @@ import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import {
+  determineLeagueClientPath,
   getLeagueClientInstallPath,
   getOSInformation,
   getRiotClientInstallPath,
@@ -53,6 +54,7 @@ app.whenReady().then(() => {
   // Set app user model id for windows
   electronApp.setAppUserModelId('com.electron')
 
+  ipcMain.handle('determineLeagueClientPath', determineLeagueClientPath)
   ipcMain.handle('getStore', getStore)
   ipcMain.handle('launchProcess', (_, clientCount) => launchProcess(clientCount))
   ipcMain.handle('pickClientPath', (_, client) => pickClientPath(client))

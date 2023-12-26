@@ -7,6 +7,7 @@ import { OSInformation } from './OSInformation'
 export type ProcessHandler = {
   stopProcess: (processes: Process[]) => Promise<void>
   checkForRunningLolClients: (runningLolClients: Process[]) => Promise<Process[]>
+  determineLeagueClientInstallPath: () => Promise<string>
   // main process
   launchProcess: (clientCount: number) => Promise<Process>
   pickClientPath: (client: client) => Promise<string>

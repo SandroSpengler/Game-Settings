@@ -17,6 +17,9 @@ export default defineConfig({
         path: 'path-browserify'
       }
     },
-    plugins: [react(), svgr()]
+    plugins: [react(), svgr()],
+    define: {
+      APP_VERSION: JSON.stringify(process.env.npm_package_version)
+    }
   }
 })
