@@ -1,5 +1,6 @@
 import {
   CssBaseline,
+  GlobalStyles,
   IconButton,
   PaletteMode,
   PaletteOptions,
@@ -114,10 +115,24 @@ function App(): JSX.Element {
       )}
     >
       <ThemeProvider theme={theme}>
+        <GlobalStyles
+          styles={{
+            '*::-webkit-scrollbar': {
+              width: '0.4em'
+            },
+            '*::-webkit-scrollbar-track': {
+              margin: '10px'
+            },
+            '*::-webkit-scrollbar-thumb': {
+              background: '#393959',
+              borderRadius: '8px'
+            }
+          }}
+        ></GlobalStyles>
         <CssBaseline />
         <HashRouter>
+          <Header toggleDarkmode={toggleColorMode}></Header>
           <QueryClientProvider client={queryClient}>
-            <Header toggleDarkmode={toggleColorMode}></Header>
             <Routes>
               <Route path="/" Component={HomePage}></Route>
               <Route path="/home" element={<HomePage />}></Route>

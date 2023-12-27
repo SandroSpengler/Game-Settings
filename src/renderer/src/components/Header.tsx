@@ -46,85 +46,83 @@ const Header = (props: HeaderProps): JSX.Element => {
   }
 
   return (
-    <Box>
-      <AppBar position="static">
-        <Toolbar
-          disableGutters={true}
-          sx={{ display: 'flex', justifyContent: 'space-between', padding: 0 }}
-        >
-          <Box>
-            <Tabs
-              value={selectedTab}
-              variant="standard"
-              aria-label="basic tabs example"
-              textColor="secondary"
-              onChange={(event, value): void => {
-                event.preventDefault()
-                setSelectedTab(value)
+    <AppBar position="sticky">
+      <Toolbar
+        disableGutters={true}
+        sx={{ display: 'flex', justifyContent: 'space-between', padding: 0 }}
+      >
+        <Box>
+          <Tabs
+            value={selectedTab}
+            variant="standard"
+            aria-label="basic tabs example"
+            textColor="secondary"
+            onChange={(event, value): void => {
+              event.preventDefault()
+              setSelectedTab(value)
 
-                switch (value) {
-                  case 0:
-                    navigate('home')
-                    break
-                  case 1:
-                    navigate('lol')
-                    break
-                }
-              }}
-            >
-              <Tab label={<Typography variant="h6">Home</Typography>} />
-              <Tab label={<Typography variant="h6">League of Legends</Typography>} />
-            </Tabs>
-          </Box>
+              switch (value) {
+                case 0:
+                  navigate('home')
+                  break
+                case 1:
+                  navigate('lol')
+                  break
+              }
+            }}
+          >
+            <Tab label={<Typography variant="h6">Home</Typography>} />
+            <Tab label={<Typography variant="h6">League of Legends</Typography>} />
+          </Tabs>
+        </Box>
 
-          <Stack direction="row" alignItems="center" gap={3}>
-            {!osPlatform && null}
+        <Stack direction="row" alignItems="center" gap={3}>
+          {!osPlatform && null}
 
-            {osPlatform === 'win32' && (
-              <SvgIcon
-                viewBox="0 0 88 88"
-                component={WindowsIcon}
-                style={{ margin: '0 10 0 0' }}
-              ></SvgIcon>
-            )}
+          {osPlatform === 'win32' && (
+            <SvgIcon
+              viewBox="0 0 88 88"
+              component={WindowsIcon}
+              style={{ margin: '0 10 0 0' }}
+            ></SvgIcon>
+          )}
 
-            {osPlatform === 'linux' && (
-              <SvgIcon
-                viewBox="0 2 48 48"
-                component={LinuxIcon}
-                style={{ margin: '0 10 0 0' }}
-              ></SvgIcon>
-            )}
+          {osPlatform === 'linux' && (
+            <SvgIcon
+              viewBox="0 2 48 48"
+              component={LinuxIcon}
+              style={{ margin: '0 10 0 0' }}
+            ></SvgIcon>
+          )}
 
-            {osPlatform === 'darwin' && (
-              <SvgIcon
-                viewBox="0 0 256 256"
-                component={AppleIcon}
-                style={{ margin: '0 10 0 0' }}
-              ></SvgIcon>
-            )}
+          {osPlatform === 'darwin' && (
+            <SvgIcon
+              viewBox="0 0 256 256"
+              component={AppleIcon}
+              style={{ margin: '0 10 0 0' }}
+            ></SvgIcon>
+          )}
 
-            <div>
-              <Tooltip title="Toggle between light and darkmode">
-                <IconButton
-                  size="large"
-                  edge="start"
-                  color="inherit"
-                  aria-label="menu"
-                  onClick={props.toggleDarkmode}
-                >
-                  <Brightness4Icon />
-                </IconButton>
-              </Tooltip>
-            </div>
+          <div>
+            <Tooltip title="Toggle between light and darkmode">
+              <IconButton
+                size="large"
+                edge="start"
+                color="inherit"
+                aria-label="menu"
+                onClick={props.toggleDarkmode}
+              >
+                <Brightness4Icon />
+              </IconButton>
+            </Tooltip>
+          </div>
 
-            <IconButton size="large" edge="start" color="inherit" aria-label="menu">
-              <MenuIcon />
-            </IconButton>
-          </Stack>
-        </Toolbar>
-      </AppBar>
-    </Box>
+          <IconButton size="large" edge="start" color="inherit" aria-label="menu">
+            <MenuIcon />
+          </IconButton>
+        </Stack>
+      </Toolbar>
+    </AppBar>
   )
 }
 

@@ -1,6 +1,8 @@
+const devEnv = import.meta.env.DEV
+
 import CloseIcon from '@mui/icons-material/Close'
 import RocketLaunchIcon from '@mui/icons-material/RocketLaunch'
-import { Box, Grid, IconButton, Paper, Stack, Tooltip, Typography } from '@mui/material'
+import { Box, Fade, Grid, Grow, IconButton, Paper, Stack, Tooltip, Typography } from '@mui/material'
 
 import FileDownloadIcon from '@mui/icons-material/FileDownload'
 
@@ -51,7 +53,7 @@ export const LeagueOfLegendsPage = (): JSX.Element => {
     if (runningLolClients.length === 0) return
 
     setSummonerInformation()
-  }, [123])
+  }, [runningLolClients.length])
 
   const setInstallPaths = async (): Promise<void> => {
     let leagueClientInstallPath = ''
@@ -79,10 +81,10 @@ export const LeagueOfLegendsPage = (): JSX.Element => {
       const runningClients = await ProcessHandler.checkForRunningLolClients([])
 
       if (runningClients.length > 0) {
-        // TODO
-        // Determine Install Path automatically
         leagueClientInstallPath = await ProcessHandler.determineLeagueClientInstallPath()
-      } else {
+      }
+
+      if (leagueClientInstallPath === '') {
         enqueueSnackbar(
           'Please select the LoL-Client path or launch a client and restart the application',
           {
@@ -102,12 +104,10 @@ export const LeagueOfLegendsPage = (): JSX.Element => {
     setRiotClientInstallPath(riotClientInstallPath)
   }
 
-  // @typescript-eslint/no-unused-vars
   const setSummonerInformation = async (): Promise<void> => {
     try {
       const lcuProperties = await ProcessHandler.readLCUProperties()
       const lcuSettings = await getGameSettings(lcuProperties)
-
       // TODO
       // add loading client information indicator
       setLcuGameSettings(lcuSettings)
@@ -115,7 +115,8 @@ export const LeagueOfLegendsPage = (): JSX.Element => {
 
       /* eslint-disable  @typescript-eslint/no-explicit-any */
     } catch (error: any) {
-      alert(error.message)
+      console.error(error.message)
+    } finally {
     }
   }
 
@@ -174,6 +175,54 @@ export const LeagueOfLegendsPage = (): JSX.Element => {
   return (
     <Fragment>
       <Grid container columns={12} spacing={1} marginTop={1} paddingX={1}>
+        {devEnv && runningLolClients.length > 0 && leagueClientProperties && (
+          <Grow in={true} timeout={750}>
+            <Grid item xs={12}>
+              <Paper sx={{ display: 'flex', padding: '10px' }}>
+                <Tooltip title="League Client Dev Info">
+                  <Stack direction="row" alignItems="center" gap={3}>
+                    <Box style={{ padding: '2px 10px 2px 10px' }}>
+                      <Typography variant="caption" color="grey">
+                        ProcessName
+                      </Typography>
+                      <Typography>{leagueClientProperties.processName}</Typography>
+                    </Box>
+                    <Box style={{ padding: '2px 10px 2px 10px' }}>
+                      <Typography variant="caption" color="grey">
+                        Process Id
+                      </Typography>
+                      <Typography>{leagueClientProperties.processId}</Typography>
+                    </Box>
+                    <Box style={{ padding: '2px 10px 2px 10px' }}>
+                      <Typography variant="caption" color="grey">
+                        Port
+                      </Typography>
+                      <Typography>{leagueClientProperties.port}</Typography>
+                    </Box>
+                    <Box style={{ padding: '2px 10px 2px 10px' }}>
+                      <Typography variant="caption" color="grey">
+                        Username
+                      </Typography>
+                      <Typography>riot</Typography>
+                    </Box>
+                    <Box style={{ padding: '2px 10px 2px 10px' }}>
+                      <Typography variant="caption" color="grey">
+                        Password
+                      </Typography>
+                      <Typography>{leagueClientProperties.password}</Typography>
+                    </Box>
+                    <Box style={{ padding: '2px 10px 2px 10px' }}>
+                      <Typography variant="caption" color="grey">
+                        Protocol
+                      </Typography>
+                      <Typography>{leagueClientProperties.protocol}</Typography>
+                    </Box>
+                  </Stack>
+                </Tooltip>
+              </Paper>
+            </Grid>
+          </Grow>
+        )}
         <Grid item xs={6}>
           <Box>
             <Paper sx={{ display: 'flex', padding: '10px' }}>
@@ -228,7 +277,7 @@ export const LeagueOfLegendsPage = (): JSX.Element => {
         </Grid>
 
         <Grid item xs={5}>
-          {leagueClientProperties ? <SummonerInfo LCUProperties={leagueClientProperties} /> : null}
+          {leagueClientProperties && <SummonerInfo LCUProperties={leagueClientProperties} />}
         </Grid>
         <Grid item xs={1}>
           <Box>
@@ -296,21 +345,15 @@ export const LeagueOfLegendsPage = (): JSX.Element => {
           </Box>
         </Grid>
         <Grid item xs={12}>
-          <ClientSettings />
+          {lcuGameSettings && (
+            <Grow in={true} timeout={750}>
+              <div>
+                <ClientSettings clientSettings={lcuGameSettings} />
+              </div>
+            </Grow>
+          )}
         </Grid>
       </Grid>
-
-      {/* <Snackbar open={pathError === '' ? false : true} autoHideDuration={3000}>
-        <Alert severity="error" onClose={() => setPathError('')}>
-          {pathError.split(':')[2]}
-        </Alert>
-      </Snackbar>
-
-      <Snackbar open={launchError === '' ? false : true} autoHideDuration={3000}>
-        <Alert severity="error" onClose={() => setLaunchError('')}>
-          {launchError}
-        </Alert>
-      </Snackbar> */}
     </Fragment>
   )
 }

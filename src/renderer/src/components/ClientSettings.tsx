@@ -1,25 +1,68 @@
-import { Box, Paper, Stack, Tooltip, Typography } from '@mui/material'
+import { AppBar, Box, Paper, Stack, Toolbar, Tooltip, Typography } from '@mui/material'
+import App from '@renderer/App'
+import LCUGameSettings, {
+  General,
+  Hud,
+  LossOfControl,
+  Voice,
+  Volume
+} from '@renderer/interfaces/LCUClientSettings'
+import { Fragment } from 'react'
 
-const ClientSettings = (): JSX.Element => {
+interface IClientSettingsProps {
+  clientSettings: LCUGameSettings
+}
+
+const ClientSettings = (props: IClientSettingsProps): JSX.Element => {
+  const mapSettings = (
+    object: General | Hud | LossOfControl | Performance | Voice | Volume
+  ): JSX.Element => {
+    const objectEntries = Object.entries(object)
+
+    return (
+      <Fragment>
+        {objectEntries.map(([key, value], i) => {
+          return (
+            <Typography key={i} variant="body1" fontSize={16}>
+              {key} {typeof value} {String(value)}
+            </Typography>
+          )
+        })}
+      </Fragment>
+    )
+  }
+
   return (
     <Box>
-      <Paper sx={{ display: 'flex', padding: '10px' }}>
-        <Tooltip title="Riot install path">
+      <Paper sx={{ padding: '10px' }}>
+        <Toolbar style={{ display: 'flex', justifyContent: 'space-between' }}>
+          <Typography fontSize={20} marginBottom="10px">
+            Client Settings
+          </Typography>
+          <Typography fontSize={20} marginBottom="10px">
+            Search Settings
+          </Typography>
+        </Toolbar>
+        <Stack direction="column" width="100%" margin="10px">
           <Box>
-            <Typography variant="caption" color="grey">
-              Client Settings
-            </Typography>
-            <Stack direction="row" alignItems="center" gap={3}>
-              <Typography variant="h6" fontSize={18}>
-                {/* C:/Riot Games/Riot Client/RiotClientServices.exe */}
-                Settings
+            <Paper style={{ padding: '15px', margin: '0px 0px 10px 0px' }}>
+              <Typography color="grey" fontSize={20} marginBottom="10px">
+                General
               </Typography>
-            </Stack>
+              {mapSettings(props.clientSettings.General)}
+            </Paper>
           </Box>
-        </Tooltip>
+          <Box>
+            <Paper style={{ padding: '15px' }}>
+              <Typography color="grey" fontSize={20} marginBottom="10px">
+                HUD
+              </Typography>
+              {mapSettings(props.clientSettings.HUD)}
+            </Paper>
+          </Box>
+        </Stack>
       </Paper>
     </Box>
   )
 }
-
 export default ClientSettings

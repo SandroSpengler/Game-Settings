@@ -19,18 +19,20 @@ import { OSInformation } from '@renderer/types/OSInformation'
 export const launchProcess = async (clientCount: number): Promise<Process> => {
   const launchArgs: string[] = ['--launch-product=league_of_legends', '--launch-patchline=live']
   const settingsStore = await getStore()
+  const osInfo = getOSInformation()
 
   if (clientCount > 0) {
     launchArgs.push('--allow-multiple-clients')
   }
 
-  const lolClient = cp.spawn(
-    `${settingsStore.store.riotClientPath}/RiotClientServices.exe`,
-    launchArgs,
-    {
-      detached: true
-    }
-  )
+  const platformPath =
+    osInfo.platform === 'win32'
+      ? `${settingsStore.store.riotClientPath}/RiotClientServices.exe`
+      : `${settingsStore.store.riotClientPath}/Riot Client.app/Contents/MacOS/RiotClientServices`
+
+  const lolClient = cp.spawn(platformPath, launchArgs, {
+    detached: true
+  })
 
   lolClient.unref()
 
@@ -64,8 +66,6 @@ export const checkForRunningLolClients = async (
 
   if (osInfo.platform === 'win32') {
     runningProcesses = await find('name', 'LeagueClient.exe')
-
-    console.log(runningProcesses)
   }
 
   if (osInfo.platform === 'darwin') {
@@ -89,12 +89,6 @@ export const checkForRunningLolClients = async (
       }
     }
 
-    if (osInfo.platform === 'darwin') {
-      if (process.name === 'LeagueClientUx') {
-        continue
-      }
-    }
-
     /* eslint-disable  @typescript-eslint/no-explicit-any */
     const binPath = (process as any).bin || ''
 
@@ -103,6 +97,12 @@ export const checkForRunningLolClients = async (
       pid: process.pid,
       name: process.name,
       bin: binPath
+    }
+
+    if (osInfo.platform === 'darwin') {
+      if (!client.bin?.endsWith('LeagueClient')) {
+        continue
+      }
     }
 
     const alreadyRunning = runningClients.find((client) => client.pid === process.pid)
@@ -164,37 +164,26 @@ export const determineLeagueClientPath = async (): Promise<string> => {
 }
 
 export const getRiotClientInstallPath = async (): Promise<string> => {
+  const osInfo = getOSInformation()
+
   const settingsStore = await getStore()
-  let needToResetPath = false
-  let errorMessage = ''
 
-  try {
-    await validateRiotClientPath(settingsStore.store.riotClientPath)
+  const riotClientInstallPath = settingsStore.get('riotClientPath')
 
-    needToResetPath = false
+  const validPath = isValidRiotClientPathPath(riotClientInstallPath, osInfo.platform === 'darwin')
 
-    return settingsStore.store.riotClientPath
-  } catch (error: any) {
-    needToResetPath = true
-    errorMessage = error.message
-  }
+  if (!validPath) {
+    // TODO
+    // check the default install path for each os
 
-  try {
-    // await validateRiotClientPath('C:/Riot Games/Riot Client')
-
-    needToResetPath = false
-    settingsStore.set('riotClientPath', 'C:/Riot Games/Riot Client')
-  } catch (error) {
-    errorMessage = 'Could not determine Riot Client install path'
-  }
-
-  if (needToResetPath) {
     settingsStore.set('riotClientPath', '')
 
-    throw new Error(errorMessage)
+    throw new Error('could not determine client path automatically')
   }
 
-  return settingsStore.store.leagueClientPath
+  settingsStore.set('riotClientPath', riotClientInstallPath)
+
+  return settingsStore.store.riotClientPath
 }
 
 export const getStore = async (): Promise<Store<SettingsStore>> => {
@@ -203,26 +192,6 @@ export const getStore = async (): Promise<Store<SettingsStore>> => {
   const store = new Store({ schema: StoreSettingsSchema })
 
   return store
-}
-
-export const validateRiotClientPath = async (riotClientPath: string): Promise<string> => {
-  if (riotClientPath === '') {
-    throw new Error('client path is invalid')
-  }
-
-  const pathExists = fs.existsSync(riotClientPath)
-
-  if (!pathExists) {
-    throw new Error('saved client path is invalid')
-  }
-
-  const LeagueClientExsits = fs.existsSync(`${riotClientPath}/RiotClientServices.exe`)
-
-  if (!LeagueClientExsits) {
-    throw new Error('saved client path is invalid')
-  }
-
-  return riotClientPath
 }
 
 export const readLCUProperties = async (): Promise<LCUProperties> => {
@@ -250,13 +219,42 @@ export const readLCUProperties = async (): Promise<LCUProperties> => {
 export const pickClientPath = async (client: client): Promise<string> => {
   const dialogResult = await dialog.showOpenDialog({ properties: ['openFile'] })
   const settingsStore = await getStore()
+  const osInfo = getOSInformation()
 
   const clientPath = dialogResult.filePaths[0].replaceAll('\\', '/')
   let dirName = ''
 
   if (client === 'league') {
-    if (!clientPath.includes('LeagueClient')) {
+    let applicationName = ''
+
+    switch (osInfo.platform) {
+      case 'win32':
+        applicationName = 'LeagueClient'
+        break
+      case 'darwin':
+        applicationName = 'League of Legends.app'
+        break
+      case 'linux':
+        break
+      default:
+        break
+    }
+
+    if (!clientPath.includes(applicationName)) {
       throw new Error('path does not contain the league client')
+    }
+
+    if (osInfo.platform === 'darwin') {
+      // League of Legends.app/Contents/LoL
+
+      dirName = path.dirname(clientPath)
+      settingsStore.set('leagueClientPath', dirName)
+
+      const macPath = dirName + '/League of Legends.app/Contents/LoL'
+
+      settingsStore.set('leagueClientPath', macPath)
+
+      return macPath
     }
 
     dirName = path.dirname(clientPath)
@@ -264,7 +262,22 @@ export const pickClientPath = async (client: client): Promise<string> => {
   }
 
   if (client === 'riot') {
-    if (!clientPath.includes('RiotClientServices')) {
+    let applicationName = ''
+
+    switch (osInfo.platform) {
+      case 'win32':
+        applicationName = 'RiotClientServices'
+        break
+      case 'darwin':
+        applicationName = 'Riot Client.app'
+        break
+      case 'linux':
+        break
+      default:
+        break
+    }
+
+    if (!clientPath.includes(applicationName)) {
       throw new Error('path does not contain the riot client')
     }
 
@@ -329,6 +342,21 @@ export const isValidLCUPath = (dirPath: string | undefined, isMac: boolean): boo
   const isGarena = common // Garena has no other
 
   return isGlobal || isCN || isGarena
+}
+
+export const isValidRiotClientPathPath = (dirPath: string | undefined, isMac: boolean): boolean => {
+  if (!dirPath) {
+    return false
+  }
+
+  const lcuClientApp = isMac ? 'Riot Client.app' : 'RiotClientServices.exe'
+  const common = fs.existsSync(path.join(dirPath, lcuClientApp))
+
+  // const isGlobal = common && fs.existsSync(path.join(dirPath, 'RADS'))
+  // const isCN = common && fs.existsSync(path.join(dirPath, 'TQM'))
+  // const isGarena = common // Garena has no other
+
+  return common
 }
 
 // TODO:
