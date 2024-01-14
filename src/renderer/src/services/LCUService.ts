@@ -1,5 +1,6 @@
 import { LolSummonerSummoner } from '@renderer/interfaces/LCUClient'
-import LCUGameSettings from '@renderer/interfaces/LCUClientSettings'
+import LCUGameSettings from '@renderer/interfaces/LCUGameSettings'
+import { LCUInputSettings } from '@renderer/interfaces/LCUInputSettings'
 import LCUProperties from '@renderer/interfaces/LCUProperties'
 
 export const getSummoner = async (lcuProperties: LCUProperties): Promise<LolSummonerSummoner> => {
@@ -32,6 +33,23 @@ export const getGameSettings = async (lcuProperties: LCUProperties): Promise<LCU
   )
 
   const gameSettings: LCUGameSettings = await request.json()
+
+  return gameSettings
+}
+
+export const getInputSettings = async (lcuProperties: LCUProperties): Promise<LCUInputSettings> => {
+  const authHeader = btoa(`riot:${lcuProperties.password}`)
+
+  const request = await fetch(
+    `${lcuProperties.protocol}://127.0.0.1:${lcuProperties.port}/lol-game-settings/v1/input-settings`,
+    {
+      headers: {
+        Authorization: `Basic ${authHeader}`
+      }
+    }
+  )
+
+  const gameSettings: LCUInputSettings = await request.json()
 
   return gameSettings
 }

@@ -2,9 +2,20 @@ const devEnv = import.meta.env.DEV
 
 import CloseIcon from '@mui/icons-material/Close'
 import RocketLaunchIcon from '@mui/icons-material/RocketLaunch'
-import { Box, Fade, Grid, Grow, IconButton, Paper, Stack, Tooltip, Typography } from '@mui/material'
-
-import FileDownloadIcon from '@mui/icons-material/FileDownload'
+import {
+  Box,
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  Grid,
+  Grow,
+  IconButton,
+  Paper,
+  Stack,
+  Tooltip,
+  Typography,
+  useTheme
+} from '@mui/material'
 
 import SvgIcon from '@mui/material/SvgIcon'
 import Process from '@renderer/types/Process'
@@ -15,16 +26,21 @@ import { Fragment, useEffect, useState } from 'react'
 import { ReactComponent as LeagueClient } from '../assets/Logo/LeagueClient.svg'
 import { ReactComponent as RiotClient } from '../assets/Logo/RiotClient.svg'
 
-import ClientSettings from '@renderer/components/ClientSettings'
+import { ImportExport } from '@mui/icons-material'
+import ImportExportSettings from '@renderer/components/ImportExportSettings'
+import Settings from '@renderer/components/Settings'
 import SummonerInfo from '@renderer/components/SummonerInfo'
-import LCUGameSettings from '@renderer/interfaces/LCUClientSettings'
+import LCUGameSettings from '@renderer/interfaces/LCUGameSettings'
+import { LCUInputSettings } from '@renderer/interfaces/LCUInputSettings'
 import LCUProperties from '@renderer/interfaces/LCUProperties'
-import { getGameSettings } from '@renderer/services/LCUService'
+import { getGameSettings, getInputSettings } from '@renderer/services/LCUService'
 import ProcessHandler from '@renderer/types/ProcessHandler'
 import { enqueueSnackbar } from 'notistack'
 import './LeagueOfLegendsPage.css'
 
 export const LeagueOfLegendsPage = (): JSX.Element => {
+  const theme = useTheme()
+
   const [runningLolClients, setRunningLolClients] = useState<Process[]>([])
 
   const [riotClientInstallPath, setRiotClientInstallPath] = useState<string>('')
@@ -32,11 +48,13 @@ export const LeagueOfLegendsPage = (): JSX.Element => {
 
   const [leagueClientProperties, setLeagueClientProperties] = useState<LCUProperties>()
   const [lcuGameSettings, setLcuGameSettings] = useState<LCUGameSettings>()
+  const [lcuInputSettings, setLcuInputSettings] = useState<LCUInputSettings>()
+
+  const [showImportExportDialog, setShowImportDialog] = useState<boolean>(false)
 
   const ProcessHandler = window.ProcessHandler as ProcessHandler
 
   //#region useEffect
-
   useEffect(() => {
     setInstallPaths()
   }, [])
@@ -44,13 +62,19 @@ export const LeagueOfLegendsPage = (): JSX.Element => {
   useEffect(() => {
     const interval = setInterval(async () => {
       const runningClients = await ProcessHandler.checkForRunningLolClients(runningLolClients)
+
       setRunningLolClients(runningClients)
-    }, 2500)
+    }, 1000)
     return (): void => clearInterval(interval)
   }, [])
 
   useEffect(() => {
-    if (runningLolClients.length === 0) return
+    if (runningLolClients.length === 0) {
+      setLcuGameSettings(undefined)
+      setLeagueClientProperties(undefined)
+
+      return
+    }
 
     setSummonerInformation()
   }, [runningLolClients.length])
@@ -107,10 +131,12 @@ export const LeagueOfLegendsPage = (): JSX.Element => {
   const setSummonerInformation = async (): Promise<void> => {
     try {
       const lcuProperties = await ProcessHandler.readLCUProperties()
-      const lcuSettings = await getGameSettings(lcuProperties)
+      const lcuGameSettings = await getGameSettings(lcuProperties)
+      const lcuInputSettings = await getInputSettings(lcuProperties)
       // TODO
       // add loading client information indicator
-      setLcuGameSettings(lcuSettings)
+      setLcuGameSettings(lcuGameSettings)
+      setLcuInputSettings(lcuInputSettings)
       setLeagueClientProperties(lcuProperties)
 
       /* eslint-disable  @typescript-eslint/no-explicit-any */
@@ -128,6 +154,8 @@ export const LeagueOfLegendsPage = (): JSX.Element => {
       const process = await ProcessHandler.launchProcess(runningLolClients.length)
 
       setRunningLolClients((prev) => [...prev, process])
+      setLcuGameSettings(undefined)
+      setLeagueClientProperties(undefined)
     } catch (error) {
       // TODO
       // Handle Launch Error
@@ -159,17 +187,10 @@ export const LeagueOfLegendsPage = (): JSX.Element => {
     }
   }
 
-  const exportLCUCLientSettings = (): void => {
-    const jsonString = `data:text/json;chatset=utf-8,${encodeURIComponent(
-      JSON.stringify(lcuGameSettings)
-    )}`
-
-    const link = document.createElement('a')
-    link.href = jsonString
-    link.download = 'settings.json'
-
-    link.click()
+  const toggleShowImportExportDialog = () => {
+    setShowImportDialog(!showImportExportDialog)
   }
+
   //#endregion
 
   return (
@@ -178,7 +199,9 @@ export const LeagueOfLegendsPage = (): JSX.Element => {
         {devEnv && runningLolClients.length > 0 && leagueClientProperties && (
           <Grow in={true} timeout={750}>
             <Grid item xs={12}>
-              <Paper sx={{ display: 'flex', padding: '10px' }}>
+              <Paper
+                sx={{ display: 'flex', padding: '10px', background: theme.palette.secondary.light }}
+              >
                 <Tooltip title="League Client Dev Info">
                   <Stack direction="row" alignItems="center" gap={3}>
                     <Box style={{ padding: '2px 10px 2px 10px' }}>
@@ -264,10 +287,19 @@ export const LeagueOfLegendsPage = (): JSX.Element => {
                     </IconButton>
                   </span>
                 </Tooltip>
-                <Tooltip title="Export Client Settings">
+                <Tooltip
+                  title={
+                    runningLolClients.length === 0 || !leagueClientProperties
+                      ? 'Launch a Client to Export Settings'
+                      : 'Export Client Settings'
+                  }
+                >
                   <span>
-                    <IconButton onClick={exportLCUCLientSettings}>
-                      <FileDownloadIcon sx={{ height: '20px' }} />
+                    <IconButton
+                      disabled={runningLolClients.length === 0 || !leagueClientProperties}
+                      onClick={toggleShowImportExportDialog}
+                    >
+                      <ImportExport sx={{ height: '20px' }} />
                     </IconButton>
                   </span>
                 </Tooltip>
@@ -348,12 +380,41 @@ export const LeagueOfLegendsPage = (): JSX.Element => {
           {lcuGameSettings && (
             <Grow in={true} timeout={750}>
               <div>
-                <ClientSettings clientSettings={lcuGameSettings} />
+                <Settings clientSettings={lcuGameSettings} />
               </div>
             </Grow>
           )}
         </Grid>
       </Grid>
+      {lcuGameSettings && lcuInputSettings && (
+        <Box>
+          <Dialog
+            open={showImportExportDialog}
+            slotProps={{ backdrop: { sx: { background: 'none' } } }}
+          >
+            <DialogTitle>
+              <Typography fontSize={24} fontWeight="bold">
+                Settings
+              </Typography>
+            </DialogTitle>
+            <DialogContent>
+              <ImportExportSettings
+                toggleShowImportExportDialog={toggleShowImportExportDialog}
+                lcuGameSettings={lcuGameSettings}
+                lcuInputSettings={lcuInputSettings}
+              />
+            </DialogContent>
+            {/* <DialogActions>
+            <Button variant="outlined" color="success" onClick={toggleShowImportExportDialog}>
+              Done
+            </Button>
+            <Button variant="outlined" color="error" onClick={toggleShowImportExportDialog}>
+              Cancel
+            </Button>
+          </DialogActions> */}
+          </Dialog>
+        </Box>
+      )}
     </Fragment>
   )
 }

@@ -26,33 +26,39 @@ function App(): JSX.Element {
     setMode((prevMode: PaletteMode) => (prevMode === 'light' ? 'dark' : 'light'))
   }
 
+  const primaryLight = {
+    light: '#757ce8',
+    main: '#3f50b5',
+    dark: '#002884',
+    contrastText: '#fff'
+  }
+
+  const secondaryLight = {
+    light: '#FFFFFF',
+    main: '#FFFFFF',
+    dark: '#00a152',
+    contrastText: '#000'
+  }
+
+  const secondaryDark = {
+    light: '#1c1b1b',
+    main: '#FFFFFF',
+    dark: '#121212',
+    contrastText: '#000'
+  }
+
   const getDesignTokens = (mode: PaletteMode): PaletteOptions => {
     const palette = {
       mode,
       ...(mode === 'light'
         ? {
-            primary: {
-              light: '#757ce8',
-              main: '#3f50b5',
-              dark: '#002884',
-              contrastText: '#fff'
-            },
-            secondary: {
-              light: '#33eb91',
-              main: '#00e676',
-              dark: '#00a152',
-              contrastText: '#000'
-            }
+            primary: primaryLight,
+            secondary: secondaryLight
             // custom light mode palette here
           }
         : {
             // custom dark mode palette here
-            secondary: {
-              light: '#33eb91',
-              main: '#00e676',
-              dark: '#00a152',
-              contrastText: '#000'
-            }
+            secondary: secondaryDark
           })
     } as PaletteOptions
 
@@ -78,6 +84,13 @@ function App(): JSX.Element {
         styleOverrides: {
           root: {
             color: 'white'
+          }
+        }
+      },
+      MuiPaper: {
+        styleOverrides: {
+          root: {
+            background: mode === 'dark' ? secondaryDark.light : secondaryLight.light
           }
         }
       }

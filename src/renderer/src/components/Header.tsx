@@ -8,7 +8,8 @@ import {
   Tabs,
   Toolbar,
   Tooltip,
-  Typography
+  Typography,
+  useTheme
 } from '@mui/material'
 
 import Brightness4Icon from '@mui/icons-material/Brightness4'
@@ -55,8 +56,8 @@ const Header = (props: HeaderProps): JSX.Element => {
           <Tabs
             value={selectedTab}
             variant="standard"
-            aria-label="basic tabs example"
             textColor="secondary"
+            aria-label="basic tabs example"
             onChange={(event, value): void => {
               event.preventDefault()
               setSelectedTab(value)
