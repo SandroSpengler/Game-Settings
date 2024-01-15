@@ -12,6 +12,7 @@ import {
   pickClientPath,
   readLCUProperties
 } from './services/ProcessService'
+import { importFile } from './services/FileService'
 
 function createWindow(): void {
   // Create the browser window.
@@ -62,6 +63,7 @@ app.whenReady().then(() => {
   ipcMain.handle('getRiotClientPath', getRiotClientInstallPath)
   ipcMain.handle('getOSInformation', getOSInformation)
   ipcMain.handle('readLCUProperties', readLCUProperties)
+  ipcMain.handle('importFile', importFile)
 
   // Default open or close DevTools by F12 in development
   // and ignore CommandOrControl + R in production.

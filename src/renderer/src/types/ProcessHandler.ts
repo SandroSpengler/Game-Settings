@@ -16,6 +16,7 @@ export type ProcessHandler = {
   getOsInformation: () => Promise<OSInformation>
   readLCUProperties: () => Promise<LCUProperties>
   getStore: () => Promise<SettingsStore>
+  importFile: () => Promise<string>
 }
 
 export default ProcessHandler

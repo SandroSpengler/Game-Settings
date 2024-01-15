@@ -13,30 +13,38 @@ import {
   Typography,
   useTheme
 } from '@mui/material'
+import LinearProgress from '@mui/material/LinearProgress'
 import { SelectedSetting } from '@renderer/enums/SelectedSettings'
 import LCUGameSettings from '@renderer/interfaces/LCUGameSettings'
 import { LCUInputSettings } from '@renderer/interfaces/LCUInputSettings'
+import LCUProperties from '@renderer/interfaces/LCUProperties'
 import {
   SelectedGameSettings,
   SelectedInputSettings,
-  selectedGameSettingsKeys,
-  selectedInputSettingsKeys,
   selectedSettings,
   selectedSettingsKeys
 } from '@renderer/interfaces/SelectedSettings'
+import { patchGameSettings } from '@renderer/services/LCUService'
+import { enqueueSnackbar } from 'notistack'
 import { useState } from 'react'
-
 interface ImportExportProps {
   toggleShowImportExportDialog: () => void
+  lcuProperties: LCUProperties
   lcuGameSettings: LCUGameSettings
   lcuInputSettings: LCUInputSettings
 }
 
 export const ImportExportSettings = (props: ImportExportProps): JSX.Element => {
   const theme = useTheme()
+  const ProcessHandler = window.ProcessHandler
 
   const [open, setOpen] = useState([false, false])
   const [enableExport, setEnableExport] = useState<boolean>(false)
+  const [enableImport, setEnableImport] = useState<boolean>(false)
+  const [showImportProgress, setShowImportProgress] = useState<boolean>(false)
+  const [importSuccess, setImportSuccess] = useState<boolean>(true)
+  const [importProgress, setImportProgress] = useState<number>(0)
+
   const [selectedGameSettings, setSelectedGameSettings] = useState<SelectedGameSettings>({
     AllGameSettings: false,
     FloatingText: false,
@@ -62,6 +70,63 @@ export const ImportExportSettings = (props: ImportExportProps): JSX.Element => {
       : setOpen((prev) => [prev[0], !prev[1]])
   }
 
+  const importFile = async (): Promise<void> => {
+    const fileResult = await ProcessHandler.importFile()
+
+    const lcuSettingsRaw: LCUGameSettings & LCUInputSettings = JSON.parse(fileResult)
+    let lcuSettings: LCUGameSettings & LCUInputSettings = {} as any
+
+    for (const key of Object.keys(lcuSettingsRaw)) {
+      if (selectedGameSettings[key] || selectedInputSettings[key]) {
+        lcuSettings[key] = lcuSettingsRaw[key]
+      }
+    }
+
+    if (Object.keys(lcuSettings).length === 0) {
+      enqueueSnackbar('File does not contain any importable settings', {
+        variant: 'error'
+      })
+
+      return
+    }
+
+    setImportProgress(0)
+    setEnableExport(false)
+    setEnableImport(false)
+    setShowImportProgress(true)
+
+    try {
+      if (Object.values(selectedGameSettings).some(Boolean)) {
+        await patchGameSettings(props.lcuProperties, lcuSettings)
+        setImportProgress(50)
+
+        enqueueSnackbar(`Game Settings have been imported`, {
+          variant: 'success'
+        })
+
+        if (!Object.values(selectedInputSettings).some(Boolean)) {
+          setImportProgress(100)
+        }
+      }
+
+      if (Object.values(selectedInputSettings).some(Boolean)) {
+        await patchGameSettings(props.lcuProperties, lcuSettings)
+        setImportProgress(100)
+        setImportSuccess(true)
+        setShowImportProgress(false)
+
+        enqueueSnackbar(`Input Settings have been imported`, {
+          variant: 'success'
+        })
+      }
+
+      props.toggleShowImportExportDialog()
+    } catch (error) {
+      setImportProgress(0)
+      setImportSuccess(false)
+    }
+  }
+
   /**
    * Allows for the selection of individual checkboxes and sets property allSettings to true if every checkbox is selected otherwise false
    *
@@ -76,6 +141,8 @@ export const ImportExportSettings = (props: ImportExportProps): JSX.Element => {
     event: React.ChangeEvent<HTMLInputElement>,
     settingKey: selectedSettingsKeys
   ) => {
+    event.preventDefault()
+
     let newState: selectedSettings = {
       ...structuredClone(selectedGameSettings),
       ...structuredClone(selectedInputSettings)
@@ -156,8 +223,10 @@ export const ImportExportSettings = (props: ImportExportProps): JSX.Element => {
     // 1 true property is enough for the export
     if (Object.values(newState!).some(Boolean)) {
       setEnableExport(true)
+      setEnableImport(true)
     } else {
       setEnableExport(false)
+      setEnableImport(false)
     }
 
     setSelectedGameSettings({
@@ -224,7 +293,17 @@ export const ImportExportSettings = (props: ImportExportProps): JSX.Element => {
       <Stack>
         <Box>
           <Typography variant="body1" margin="0px 0px 10px 0px">
-            You can import and export your League of Legends Settings
+            <Typography variant="body1" component="span" fontWeight="bold">
+              Select
+            </Typography>{' '}
+            the settings you wish to{' '}
+            <Typography variant="body1" component="span" fontWeight="bold">
+              import
+            </Typography>{' '}
+            or{' '}
+            <Typography variant="body1" component="span" fontWeight="bold">
+              export
+            </Typography>
           </Typography>
         </Box>
         <Box sx={{ margin: '0px' }}>
@@ -438,17 +517,31 @@ export const ImportExportSettings = (props: ImportExportProps): JSX.Element => {
             </Collapse>
           </List>
         </Box>
+        {showImportProgress && (
+          <Stack
+            direction="column"
+            alignItems="center"
+            gap={2}
+            sx={{ margin: '10px 10px 20px 10px' }}
+          >
+            <Typography>Importing settings...</Typography>
+            <LinearProgress
+              value={importProgress}
+              variant="determinate"
+              sx={{ width: '100%' }}
+              color={importSuccess ? 'success' : 'error'}
+            />
+          </Stack>
+        )}
         <Stack direction="row-reverse" gap={1}>
           <Button variant="outlined" color="error" onClick={props.toggleShowImportExportDialog}>
             Cancel
           </Button>
-          <Button
-            variant="outlined"
-            color="success"
-            disabled={!enableExport}
-            onClick={exportLCUCLientSettings}
-          >
+          <Button variant="outlined" disabled={!enableExport} onClick={exportLCUCLientSettings}>
             Export
+          </Button>
+          <Button variant="outlined" disabled={!enableImport} onClick={importFile}>
+            Import
           </Button>
         </Stack>
       </Stack>

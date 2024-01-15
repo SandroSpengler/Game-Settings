@@ -386,7 +386,7 @@ export const LeagueOfLegendsPage = (): JSX.Element => {
           )}
         </Grid>
       </Grid>
-      {lcuGameSettings && lcuInputSettings && (
+      {lcuGameSettings && lcuInputSettings && leagueClientProperties && (
         <Box>
           <Dialog
             open={showImportExportDialog}
@@ -400,6 +400,7 @@ export const LeagueOfLegendsPage = (): JSX.Element => {
             <DialogContent>
               <ImportExportSettings
                 toggleShowImportExportDialog={toggleShowImportExportDialog}
+                lcuProperties={leagueClientProperties}
                 lcuGameSettings={lcuGameSettings}
                 lcuInputSettings={lcuInputSettings}
               />

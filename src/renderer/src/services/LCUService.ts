@@ -53,3 +53,45 @@ export const getInputSettings = async (lcuProperties: LCUProperties): Promise<LC
 
   return gameSettings
 }
+
+export const patchInputSettings = async (
+  lcuProperties: LCUProperties,
+  gameSettings: LCUInputSettings | (LCUGameSettings & LCUInputSettings)
+): Promise<void> => {
+  const authHeader = btoa(`riot:${lcuProperties.password}`)
+
+  const request = await fetch(
+    `${lcuProperties.protocol}://127.0.0.1:${lcuProperties.port}/lol-game-settings/v1/input-settings`,
+    {
+      method: 'PATCH',
+      headers: {
+        Authorization: `Basic ${authHeader}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(gameSettings)
+    }
+  )
+
+  await request.json()
+}
+
+export const patchGameSettings = async (
+  lcuProperties: LCUProperties,
+  gameSettings: LCUGameSettings | (LCUGameSettings & LCUInputSettings)
+): Promise<void> => {
+  const authHeader = btoa(`riot:${lcuProperties.password}`)
+
+  const request = await fetch(
+    `${lcuProperties.protocol}://127.0.0.1:${lcuProperties.port}/lol-game-settings/v1/game-settings`,
+    {
+      method: 'PATCH',
+      headers: {
+        Authorization: `Basic ${authHeader}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(gameSettings)
+    }
+  )
+
+  await request.json()
+}

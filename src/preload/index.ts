@@ -27,7 +27,8 @@ if (process.contextIsolated) {
       getRiotClientInstallPath: () => ipcRenderer.invoke('getRiotClientPath'),
       getOsInformation: () => ipcRenderer.invoke('getOSInformation'),
       readLCUProperties: () => ipcRenderer.invoke('readLCUProperties'),
-      getStore: () => ipcRenderer.invoke('getStore')
+      getStore: () => ipcRenderer.invoke('getStore'),
+      importFile: () => ipcRenderer.invoke('importFile')
     }
 
     contextBridge.exposeInMainWorld('ProcessHandler', ProcessHandler)
