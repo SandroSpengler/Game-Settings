@@ -221,7 +221,8 @@ export const pickClientPath = async (client: client): Promise<string> => {
   const settingsStore = await getStore()
   const osInfo = getOSInformation()
 
-  const clientPath = dialogResult.filePaths[0].replaceAll('\\', '/')
+  const clientPath = dialogResult.filePaths[0]
+  // .replaceAll('\\', '/')
   let dirName = ''
 
   if (client === 'league') {

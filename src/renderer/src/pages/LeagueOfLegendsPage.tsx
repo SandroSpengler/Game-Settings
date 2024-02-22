@@ -88,7 +88,7 @@ export const LeagueOfLegendsPage = (): JSX.Element => {
     } catch (error) {
       riotClientInstallPath = ''
 
-      enqueueSnackbar('Riot Games install path was not found, please select the install path', {
+      enqueueSnackbar('Riot Client not found. Please select the path to the client', {
         variant: 'error'
       })
     }
@@ -98,7 +98,7 @@ export const LeagueOfLegendsPage = (): JSX.Element => {
     } catch (error) {
       leagueClientInstallPath = ''
 
-      enqueueSnackbar('League of Legends install path was not found', { variant: 'error' })
+      enqueueSnackbar('No League Client install path was found', { variant: 'error' })
     }
 
     try {
@@ -119,7 +119,7 @@ export const LeagueOfLegendsPage = (): JSX.Element => {
     } catch (error) {
       leagueClientInstallPath = ''
 
-      enqueueSnackbar('Automatically determining League of Legends install path failed', {
+      enqueueSnackbar('Automatically determining League Client path failed', {
         variant: 'error'
       })
     }
@@ -181,7 +181,7 @@ export const LeagueOfLegendsPage = (): JSX.Element => {
         setRiotClientInstallPath(clientPath)
       }
     } catch (error) {
-      const errorMessage = `${client}: path does not contain a client`
+      const errorMessage = `Path does not contain the ${client.toUpperCase()} client`
 
       enqueueSnackbar(errorMessage, { variant: 'error' })
     }
@@ -344,7 +344,11 @@ export const LeagueOfLegendsPage = (): JSX.Element => {
                     <SvgIcon viewBox="0 0 48 48" sx={{ height: '50px' }}>
                       <LeagueClient></LeagueClient>
                     </SvgIcon>
-                    <Typography variant="h6" fontSize={18}>
+                    <Typography
+                      variant="h6"
+                      fontSize={18}
+                      sx={leagueClientInstallPath ? {} : { color: 'red' }}
+                    >
                       {leagueClientInstallPath === ''
                         ? 'no path was found'
                         : leagueClientInstallPath}
@@ -367,8 +371,12 @@ export const LeagueOfLegendsPage = (): JSX.Element => {
                     <SvgIcon viewBox="0 0 48 48" sx={{ height: '50px' }}>
                       <RiotClient></RiotClient>
                     </SvgIcon>
-                    <Typography variant="h6" fontSize={18}>
-                      {riotClientInstallPath === '' ? 'no path was found' : riotClientInstallPath}
+                    <Typography
+                      variant="h6"
+                      fontSize={18}
+                      sx={riotClientInstallPath ? {} : { color: 'red' }}
+                    >
+                      {riotClientInstallPath === '' ? 'Path not found' : riotClientInstallPath}
                     </Typography>
                   </Stack>
                 </Box>

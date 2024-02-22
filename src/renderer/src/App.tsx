@@ -99,15 +99,12 @@ function App(): JSX.Element {
 
   const StyledMaterialDesignContent = styled(MaterialDesignContent)(() => ({
     '&.notistack-MuiContent-success': {
-      color: '#2e2d2d',
       fontSize: '16px'
     },
     '&.notistack-MuiContent-error': {
-      color: '#2e2d2d',
       fontSize: '16px'
     },
     '&.notistack-MuiContent-info': {
-      color: '#2e2d2d',
       fontSize: '16px'
     }
   }))
@@ -116,6 +113,12 @@ function App(): JSX.Element {
     <SnackbarProvider
       autoHideDuration={5000}
       preventDuplicate={true}
+      iconVariant={{
+        success: '✅',
+        error: '',
+        warning: '⚠️',
+        info: 'ℹ️'
+      }}
       Components={{
         success: StyledMaterialDesignContent,
         error: StyledMaterialDesignContent,
