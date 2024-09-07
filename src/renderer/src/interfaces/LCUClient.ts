@@ -17553,7 +17553,9 @@ export interface LolSummonerSummoner {
   /** @format int64 */
   accountId?: number
   displayName?: string
+  gameName: string
   internalName?: string
+  tagLine: string
   nameChangeFlag?: boolean
   /** @format int32 */
   percentCompleteForNextLevel?: number

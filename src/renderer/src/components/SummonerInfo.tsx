@@ -23,9 +23,12 @@ const SummonerInfo = (props: SummonerInfoProps): JSX.Element => {
       ) : (
         <Paper sx={{ display: 'flex', padding: '10px' }}>
           <Tooltip title="Currently logged in Summoner">
-            <Stack direction="row" alignItems="center" gap={3}>
-              <Typography variant="h6" fontSize={22}>
-                {data?.displayName}
+            <Stack direction="row" alignItems="center" gap={1}>
+              <Typography variant="h6" fontSize={22} fontWeight={'bold'}>
+                {data?.gameName}
+              </Typography>
+              <Typography variant="h6" fontSize={22} color={'gray'}>
+                #{data?.tagLine}
               </Typography>
             </Stack>
           </Tooltip>

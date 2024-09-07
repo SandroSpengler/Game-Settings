@@ -8,8 +8,7 @@ import {
   Tabs,
   Toolbar,
   Tooltip,
-  Typography,
-  useTheme
+  Typography
 } from '@mui/material'
 
 import Brightness4Icon from '@mui/icons-material/Brightness4'

@@ -137,6 +137,7 @@ export const LeagueOfLegendsPage = (): JSX.Element => {
       // add loading client information indicator
       setLcuGameSettings(lcuGameSettings)
       setLcuInputSettings(lcuInputSettings)
+
       setLeagueClientProperties(lcuProperties)
 
       /* eslint-disable  @typescript-eslint/no-explicit-any */
